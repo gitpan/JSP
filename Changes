@@ -1,0 +1,31 @@
+1.0  2010-05-XX
+
+     This is a fork from Claes Jakobsson's JavaScript module.
+     Althought almost every area was revamped, we try hard to be fully backwards
+     compatible, but you should read the documentation.
+
+     The following are the most visible changes:
+
+    - All that you cat expect to be passed by reference between both
+      interpreters are now not "converted" but passed encapsulated in
+      specialized classes and are "alive".
+    - All Perl classes are exportable to javascript. Think (mouth-watering):
+
+	var DBI = Sys.require('DBI');
+	var handler = DBI.connect(...);
+
+    - New "questions free" building mechanism.
+      Makefile.pl now depends on ExtUtisl::PkgConfig.
+    - Builds against SpiderMonkey 1.7.0 up to (unreleased) 1.8.5 (Gecko 1.9.3).
+    - Improved exception handling.
+    - Perl can access and manipulate javascript's 'this'.
+    - Full support for utf8 even when SpiderMonkey wasn't compiled with support
+      for it.
+    - The code is modularized, some subsystems are only loaded on demand.
+    - A command line 'jsp' javascript interpreter included for standalone js
+      execution.
+    - Much bigger test battery. Grown from 311 to over 900 tests. 
+    - Revised and extender documentation.
+    - Many bugs fixed.
+    - A few (we hope) new bugs.
+

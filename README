@@ -1,0 +1,134 @@
+------------
+INTRODUCTION
+------------
+
+JSP.pm is a bridge between Mozilla's SpiderMonkey engine and perl engine.
+
+JSP allows you to export perl functions, classes and even entire perl namespaces
+to javascript, then compile and execute javascript code and call javascript
+functions.
+
+You can pass any variable or value between both interpreters and JSP does
+automatic reflexion between perl and javascript datatypes.
+
+You can start using all this writing JavaScript code with the included "jsp"
+shell.
+
+    #!/bin/jsp
+
+    // This JavaScript code uses perl's features in a transparent way
+
+    say('Hello World!');
+    say('Are you '+Sys.Env.USER+'?');
+
+    if(Sys.Argv.length) say('My argv: ' + Sys.Argv.toString());
+
+
+Execute javascript code from perl:
+
+    use JSP;
+
+    my $ctx = JSP->stock_context;
+
+    $ctx->eval(q|
+       for (i = 99; i > 0; i--) {
+	 say(i + " bottle(s) of beer on the wall, " + i + " bottle(s) of beer");
+	 say("Take 1 down, pass it around, ");
+	 if (i > 1) {
+	   say((i - 1) + " bottle(s) of beer on the wall.");
+	 }
+	 else {
+	   say("No more bottles of beer on the wall!");
+	 }
+       }
+    |);
+
+
+Even use CPAN modules directly from javascript:
+
+    #!/usr/bin/jsp
+    require('Gtk2', 'Gtk2');
+    install('Gtk2.Window', 'Gtk2::Window');
+    install('Gtk2.Button', 'Gtk2::Button');
+
+    Gtk2.init();
+
+    var window = new Gtk2.Window('toplevel');
+    var button = new Gtk2.Button('Quit');
+
+    button.signal_connect('clicked', function() { Gtk2.main_quit() });
+    window.add(button);
+    window.show_all();
+
+    Gtk2.main();
+    say('Thats all folks!');
+
+------------
+INSTALLATION
+------------
+
+Prerequisites
+-------------
+
+To compile and install JSP, make sure you have SpiderMonkey's headers
+and libraries installed. The simplest way to get them is to install a recent
+copy of the XULRunner SDK (aka Gecko SDK).
+
+* Linux
+
+Most Linux distros provides the XULRunner SDK: in Fedora it is provided in the
+package 'xulrunner-devel', in Debian in 'xulrunner-dev', Ubuntu distributes it
+in parts, you need 'libmozjs-dev'.
+Some distros ship a 'js-devel' package, that can be used too, but is usually an
+older version (< 1.8.0) that lacks some features.
+
+All those ships a 'pkg-config' file with the required compilation parameters,
+please install ExtUtils::PkgConfig, Makefile.PL will use it.
+
+* Windows
+
+Grab a copy of XULRunner SDK from <https://developer.mozilla.org/en/Gecko_SDK>,
+unzip it and include its "bin" directory in front of the PATH environment variable.
+
+For example, if you unzip it at e:\xulrunner-sdk, you should setup your path
+with:
+
+  C:\> set PATH=e:\xulrunner-sdk\bin:%PATH%
+
+That way Makefile.PL can find all the required files.
+
+* MacOS
+
+Untested, may be some hacking required
+
+Building
+--------
+
+To build and install this module, do the following:
+
+> perl Makefile.PL
+> make
+> make test
+> make install
+
+In Windows, substitute "make" with "nmake", the build is tested with VS 6.0+.
+
+-------
+SUPPORT
+-------
+
+This is a pre-release version, please submit any questions, bug reports,
+comments, feature requests, etc., to  Salvador Ortiz <sortiz@cpan.org>
+
+---------
+COPYRIGHT
+---------
+
+Copyright (c) 2009 - 2010, Salvador Ortiz <sortiz@cpan.org>.
+All rights reserved.
+
+Some code adapted from JavaScript module
+Copyright (c) 2001 - 2008, Claes Jakobsson <claesjac@cpan.org>.
+
+This module is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. See http://dev.perl.org/licenses/artistic.html
