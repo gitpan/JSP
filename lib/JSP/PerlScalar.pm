@@ -18,7 +18,7 @@ scalars.
 =head1 JAVASCRIPT INTERFACE
 
 Any I<unblessed> SCALAR reference that you pass from perl to javascrip will be
-wrapped as an instance of C<PerlScalar>, Blessed ones will be normally a <PerlObject>.
+wrapped as an instance of C<PerlScalar>, Blessed ones will be normally a C<PerlObject>.
 
 =head2 Contructor
 

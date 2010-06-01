@@ -194,17 +194,18 @@ In javascript I<every call to a function is a method call> and a reference to
 the caller is visible inside the function as C<this>. The function author decides
 if behave as a method, using C<this> or as a simple function ignoring C<this>.
 
-In perl a method call uses diferent syntax that a regular one. A sub called
-as a method sees its caller in front of the other arguments.
+In perl method calls use a syntax different from regular calls. A subroutine
+called as a method sees its caller in front of the other arguments.
 
-When the caller to a C<PerlSub> is either a perl defined class or a
-C<PerlObject> JSP's engine will push it in the arguments. This will make
-method and class perl call semantics just work.
+When the caller to a C<PerlSub> is either a C<PerlObject> or a C<Stash>, JSP's
+engine will push it in the arguments. The call will use perl's method call
+semantics.
 
-To extend regular javascript objects with C<PerlSub> methods you need a way to
+In every other case, JSP's engine assumes that you are creating or extending
+regular JavaScript objects with C<PerlSub>-based methods and you need a way to
 get the value of C<this> in a I<transparent> way. Thats the pourpouse of the
 magical variable L<JSP/$This>.
 
-Perl code not aware of being called from javascript see its arguments
-unmodified. Perl code can have javascript's C<this> via $JSP::This. And
-everyone is happy.
+Perl code not aware of being called from JavaScript will see its arguments
+unmodified. Perl code that needs JavaScript's C<this> gets it in C<$JSP::This>.
+And everyone is happy.

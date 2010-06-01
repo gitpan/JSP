@@ -1,5 +1,5 @@
 #!perl
-use Test::More tests => 92;
+use Test::More tests => 99;
 use utf8;
 use strict;
 use warnings;
@@ -12,9 +12,11 @@ use JSP;
 sub foo {
     my $self = shift;
     if(ref $self) {
-	isa_ok($self,'main', "Correct invocant, as a method");
+	isa_ok($self, 'main', "Correct invocant, as a method");
+	is($JSP::This, $self, "'this' is \$self");
     } else {
 	is($self, 'arg1', "Correct invocant, as a simple sub");
+	isnt($JSP::This, $self,  "'this' isnt \$self");
     }
     my $value = shift;
     return $value;
@@ -25,8 +27,10 @@ sub BarP::meth {
     my $datum = shift;
     if(ref $self) {
 	isa_ok($self, "BarP", "Correct invocant, as a method");
+	is($JSP::This, $self, "'this' is \$self");
     } else {
 	is($self, 'BarP', "I was static called");
+	isa_ok($JSP::This, 'JSP::Stash', "'this' isa Stash");
     }
     return $datum + 1;
 }
@@ -65,13 +69,14 @@ is($stash->{"__PACKAGE__"}, 'main', "Package is 'main'");
 
 {
   # PerlObjects properties
+  is($ctx->eval('obj.__PACKAGE__'), 'main', "JS have __PACKAGE__");
   ok(my $bar = $ctx->eval(q| obj.foo; |), "foo visible");
   isa_ok($bar, 'CODE', "From perl side");
-  is($ctx->eval(q| obj.foo(8); |), 8, "Can be called");
+  is($ctx->eval(q| obj.foo(8); |), 8, "Can be called as a method");
   like($ctx->eval(q| obj.foo.toString() |), qr/[perl code]/, "Correct type: [perl code]");
   ok(!$ctx->eval(q| obj.hasOwnProperty('foo'); |), "Inhered");
   is(ref($ctx->eval(q| bar = obj.foo; bar; |)), ref($bar), "Can be stoled");
-  is($ctx->eval(q|bar('arg1','arg2');|), 'arg2', "Bar called");
+  is($ctx->eval(q|bar('arg1','arg2');|), 'arg2', "Bar called as simple function");
 }
 
 # Forced overrides

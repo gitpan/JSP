@@ -100,17 +100,17 @@ javascript Object.
 =head2 Constructor
 
 In Perl you can create new JSP::Error instances, usefull when you need to
-throw an exception from a perl land function called from javascript:
+throw an exception from a perl function called from JavaScript:
 
     die(JSP::Error->new('something fails'));
 
-In fact, when you C<die> in perl land inside a function that is being called from
-javascript and if the error (in C<$@>) is a simple perl string, it will be
+In fact, when you C<die> in perl land inside code that is being called from
+JavaScript and if the error (in C<$@>) is a simple perl string, it will be
 converted to an <Error> instance with the equivalent to
 C<< JSP::Error->new($@) >>.
 
-So the code above is seen as if C<throw new Error('something fails');>
-was executed in javascript.
+So the code above is seen by JavaScript as if C<throw new Error('something fails');>
+was executed.
 
 =over 4
 
@@ -120,8 +120,8 @@ was executed in javascript.
 
 =item new($message, $fileName, $lineNumber)
 
-I<If inside perl code that is called from javascript>, C<new(...)> will contructs
-a new javascript C<Error> instance, wrap it in a JSP::Error object and return it.
+I<If inside perl code that is called from JavaScript>, C<new(...)> will contructs
+a new JavaScript C<Error> instance, wrap it in a JSP::Error object and return it.
 
 If called outside, it dies with the error "Not in a javascript context".
 
@@ -129,7 +129,7 @@ If called outside, it dies with the error "Not in a javascript context".
 
 =head2 Instance properties
 
-C<Error> instances in javascript have the following properties.
+C<Error> instances in JavaScript have the following properties.
 
 =over 4
 
@@ -157,28 +157,28 @@ Stack trace.
 
 =head2 Instance methods
 
-The following methods are simple perl wrappers over the properties above used you like
-more methods than properties.
+The following methods are simple perl wrappers over the properties above, use
+when you like more methods than properties.
 
 =over 4
 
-=item message
+=item message ( )
 
 The cause of the exception.
 
-=item file
+=item file ( )
 
 The name of the file that the caused the exception.
 
-=item line
+=item line ( )
 
 The line number in the file that caused the exception.
 
-=item as_string
+=item as_string ( )
 
 A stringification of the exception in the format C<$message at $file line $line>
 
-=item stacktrace
+=item stacktrace ( )
 
 Returns the stacktrace for the exception as a list of hashrefs containing
 C<function>, C<file> and C<lineno>.

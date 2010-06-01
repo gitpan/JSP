@@ -2,7 +2,8 @@
 INTRODUCTION
 ------------
 
-JSP.pm is a bridge between Mozilla's SpiderMonkey engine and perl engine.
+JSP.pm is a bridge between Mozilla's SpiderMonkey JavaScript engine and the
+Perl engine.
 
 JSP allows you to export perl functions, classes and even entire perl namespaces
 to javascript, then compile and execute javascript code and call javascript
@@ -11,20 +12,20 @@ functions.
 You can pass any variable or value between both interpreters and JSP does
 automatic reflexion between perl and javascript datatypes.
 
-You can start using all this writing JavaScript code with the included "jsp"
-shell.
+You can start using all this by writing JavaScript code and running it with the
+included "jsp" shell:
 
     #!/bin/jsp
 
     // This JavaScript code uses perl's features in a transparent way
 
     say('Hello World!');
-    say('Are you '+Sys.Env.USER+'?');
+    say('Are you ' + Sys.Env['USER'] + '?');
 
     if(Sys.Argv.length) say('My argv: ' + Sys.Argv.toString());
 
 
-Execute javascript code from perl:
+Or execute JavaScript code from perl:
 
     use JSP;
 
@@ -44,7 +45,7 @@ Execute javascript code from perl:
     |);
 
 
-Even use CPAN modules directly from javascript:
+Even use installed CPAN modules directly from JavaScript:
 
     #!/usr/bin/jsp
     require('Gtk2', 'Gtk2');
@@ -63,6 +64,7 @@ Even use CPAN modules directly from javascript:
     Gtk2.main();
     say('Thats all folks!');
 
+
 ------------
 INSTALLATION
 ------------
@@ -71,19 +73,25 @@ Prerequisites
 -------------
 
 To compile and install JSP, make sure you have SpiderMonkey's headers
-and libraries installed. The simplest way to get them is to install a recent
-copy of the XULRunner SDK (aka Gecko SDK).
+and libraries installed.
+
+If you have build your own SpiderMonkey from sources, set the environment
+variable 'JS_SRC' to the path of your build directory, normally one below
+SM's 'js/src' directory, and skip to "Building" below.
+
+Otherwise the simplest way to get SM's headers an libraries is to install a
+recent copy of the XULRunner SDK (aka Gecko SDK).
 
 * Linux
 
-Most Linux distros provides the XULRunner SDK: in Fedora it is provided in the
-package 'xulrunner-devel', in Debian in 'xulrunner-dev', Ubuntu distributes it
-in parts, you need 'libmozjs-dev'.
-Some distros ship a 'js-devel' package, that can be used too, but is usually an
-older version (< 1.8.0) that lacks some features.
+Most Linux distributions provide the XULRunner SDK: in Fedora it is provided in
+the package 'xulrunner-devel', in Debian in 'xulrunner-dev', Ubuntu distributes
+it in parts, you need 'libmozjs-dev'.  Some distros ship a 'js-devel' package,
+that can be used too, but it is usually an older version (< 1.8.0) that lacks
+some features.
 
-All those ships a 'pkg-config' file with the required compilation parameters,
-please install ExtUtils::PkgConfig, Makefile.PL will use it.
+All those should include a pkg-config's file that Makefile.PL will use to get
+the required compilation parameters.
 
 * Windows
 
@@ -97,9 +105,16 @@ with:
 
 That way Makefile.PL can find all the required files.
 
+We use VS 6.0+ for all testing.
+
 * MacOS
 
-Untested, may be some hacking required
+Untested, some hacking may be required.
+
+* Other Unixes
+
+All should work as long as Makefile.PL finds a 'pkg-config' file for your
+installed SM.
 
 Building
 --------
@@ -111,7 +126,7 @@ To build and install this module, do the following:
 > make test
 > make install
 
-In Windows, substitute "make" with "nmake", the build is tested with VS 6.0+.
+In Windows, substitute "make" with "nmake".
 
 -------
 SUPPORT

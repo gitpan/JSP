@@ -113,6 +113,7 @@ use overload '%{}' => sub { tie my(%h),__PACKAGE__,$_[0]; \%h },
     fallback => 1;
 sub TIEHASH { $_[1] }
 sub DESTROY {} # This hasn't a passport
+sub VALID { ${$_[0]}->[1] && ${$_[0]}->[1]->_isjsvis(${$_[0]}->[6]); }
 
 package #Hide from PAUSE
     JSP::Any;
@@ -333,7 +334,7 @@ With this you can use any of the following:
 
     my $stash = $ctl->add('Foo::Bar');
 
-Adds the package named $package_name to the list of namespaces visible in
+Adds the package named I<$package_name> to the list of namespaces visible in
 javascript, if not in there already.  Returns the L<JSP::Stash>
 object that encapsulates the associated C<Stash>.
 
@@ -341,14 +342,14 @@ object that encapsulates the associated C<Stash>.
 
     $ctl->added('Foo::Bar');
 
-Check if the package with the given $package_name is in the list of perl
+Check if the package with the given I<$package_name> is in the list of perl
 namespaces visible from javascript land. Returns a TRUE value
-(the L<JSP::Stash> object) if $package_name is in the list, otherwise
+(the L<JSP::Stash> object) if I<$package_name> is in the list, otherwise
 returns a FALSE value.
 
-Normal operation is to automatically add namespaces as needed. Packages are added when
-a perl object enters javacript or you use L<JSP::Context/bind_class> and the
-package isn't already known.
+Normal operation is to automatically add namespaces as needed. Packages are
+added when a perl object enters javacript or you use L<JSP::Context/bind_class>
+and the package isn't already known.
 
 =item list ( )
     
@@ -371,8 +372,8 @@ I<bind> => [ I<$package>, I<$mode> ]
 Where I<bind> is the property name to attach the package named I<$package> and
 I<$mode> is the form to perform the binding.
 
-There are three ways to bind a package: binding as a constructor, as a static
-class or as an indirect form. You choose which way to use depending on the value
+There are three ways to bind a package: binding as a I<constructor>, as a I<static
+class> or in I<indirect form>. You choose which way to use depending on the value
 you give to the I<$mode> argument:
 
 =over 4
@@ -485,7 +486,7 @@ I<BIND_OPERATION>s as follows:
     
     $ctl->secure();
 
-Prevent modifications to the controller's context global object. No more perl
-namspaces can be installed or exported to the context.
+Prevent further modifications to the controller's list. As a result no more perl
+namespaces can be installed nor exported to the context.
 
 =back

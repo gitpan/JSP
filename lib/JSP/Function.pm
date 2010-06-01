@@ -61,7 +61,7 @@ method L<JSP::Context/call>.
     my $func = $ctx->eval(q{
 	// Define a simple function
 	function myfunc(arg1) {
-	    say("You sendme "+arg1);
+	    say("You sendme " + arg1);
 	};
 	// And return a reference to it
 	myfunc;
@@ -69,7 +69,7 @@ method L<JSP::Context/call>.
 
     $ctx->call($func => "some text"); # say 'You sendme some text'
 
-You can use C<$ctx->call> with the name of the Function as its first argument,
+You can use C<< $ctx->call >> with the name of the Function as its first argument,
 but a JSP::Function instance can hold a reference to an anonymous one:
 
     my $func2 = $ctx->eval(q{ function (a, b) { return a + b }; });
@@ -88,7 +88,7 @@ This class inherits from JSP::Object.
 
 =head1 PERL INTERFACE
 
-Function instances are javascript objects and as such, they have some methods,
+Function instances are JavaScript Objects and as such, they have some methods,
 and this module adds some more, usable from perl.
 
 =head2 INSTANCE METHODS
@@ -99,12 +99,12 @@ and this module adds some more, usable from perl.
 
   $func->call($somethis, $arg1, $arg2);
 
-Call the underlaying javascript function as an instance of the C<$somethis>
+Call the underlaying javascript function as an instance of the I<$somethis>
 argument. All remaining arguments are passed as arguments to the function.
 
-That is, inside the function C<this> will be the value of C<$somethis>.
+That is, inside the function C<this> will be the value of I<$somethis>.
 
-This is the analogous to C<func.call(somethis, arg1, arg2)> in javascript when
+This is the analogous to C<func.call(somethis, arg1, arg2)> in JavaScript when
 C<func> is a reference to the function to be called.
 
 This is different from C<< $ctx->call($func, ...) >> that always uses the
@@ -116,13 +116,13 @@ global object for C<this>.
 
 Call the underlaying javascript function in the same way as L</call> above, but
 use the elements of C<$array_arguments> as the arguments to the call,
-C<$array_arguments> must be an ARRAY reference.
+I<$array_arguments> must be an ARRAY reference.
 
 Analogous to C<func.apply(somethis, arguments)> in javascript.
 
 =item new ( )
 
-Call the underlaying javascript function as a constructor.
+Call the underlaying JavaScript Function as a constructor.
 
 =item prototype ( )
 
@@ -130,7 +130,7 @@ Returns the C<prototype> of the function as a JSP::Object. Useful if the
 function is a contructor and you need to inspect or modify its C<prototype>
 property.
 
-=item CODE_REF
+=item CODE_REF ( )
 
 Returns a CODE_REF that encapsulate a closure that calls the underlaying
 JSP::Function.
@@ -150,13 +150,13 @@ when the JSP::Function is seen as a L<JSP::Object>
 
 =item name
 
-  $func->{name}
+  $func->{name}; # 'myfunc'
 
 Retrieves the name of the function.
 
 =item length
 
-  $func->{length}
+  $func->{length}; # 1
 
 Retrieves the number of arguments that the function expects.
 

@@ -7,7 +7,7 @@ __END__
 
 =head1 NAME
 
-JSP::PerlArray - Encapsulate a Perl array in javascript space
+JSP::PerlArray - Encapsulate a Perl ARRAY in javascript space
 
 Any ARRAY reference that you pass from perl to javascript will be automatically
 wrapped as an instance of C<PerlArray>, this page documents its properties and
@@ -15,9 +15,9 @@ methods.
 
 =head1 JAVASCRIPT INTERFACE
 
-Any perl ARRAY is exposed I<by reference> in javascript space as an instance of
-C<PerlArray>.  Them behave like native javascript Arrays and implements all
-methods documented for native ones.
+Any perl ARRAY is exposed in javascript space as an instance of C<PerlArray>.
+Them behave like native javascript Arrays and implements all methods documented
+for native ones.
 
 When perl ARRAY enters javascript space for the first time a C<PerlArray>
 wrapper will be created, multiple visits of the same ARRAY will use the same
@@ -81,8 +81,8 @@ Setting C<parray.length = 0;> effectively clears the array.
 
 =head2 Methods
 
-All the methods documented for instances of Array can be used for instances of
-PerlArray, please check your javascript documentation.
+All the methods documented for instances of Array are implemented for instances
+of PerlArray, please check your javascript documentation.
 
 The more common are:
 
@@ -207,7 +207,7 @@ When you set the variable I<$construct_blessed> to a TRUE value, you are
 turning on the Claes's JavaScript compatibility mode. This affects the behavior
 of the javascript C<PerlHash> constructor.
 
-This feature can be removed at any time. I strongly recommend to do not use it.
+This feature can be removed at any time. I strongly recommend against using it.
 Read "Migrating from JavaScript.txt" for the details.
 
 =cut

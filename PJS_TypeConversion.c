@@ -17,7 +17,9 @@ passport_finalize(
     SV *box = (SV *)JS_GetPrivate(cx, passport);
     if(box && SvOK(box) && SvROK(box)) {
 	AV *avbox = (AV *)SvRV(box);
+#ifdef DEBUG
 	JSObject *parent = JS_GetParent(cx, passport);
+#endif
 	PJS_DEBUG3("About to free a %s rc:%d,%d\n", JS_GET_CLASS(cx, parent)->name, 
 		   SvREFCNT(box), SvREFCNT(avbox)); 
 	if(PL_dirty) return;

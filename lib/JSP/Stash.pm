@@ -5,22 +5,24 @@ __END__
 
 =head1 NAME
 
-JSP::Stash - Perl namespaces reflector for javascript.
+JSP::Stash - Perl namespaces reflector for JavaScript.
 
 =head1 DESCRIPTION
 
-Every perl namespace when exposed to javascript either automatically or by the methods
-of the  L<JSP::Controller> perl class is represented by an instance of a
+Every perl namespace when exposed to JavaScript either automatically or by the
+methods of the  L<JSP::Controller> perl class is represented by an instance of a
 C<Stash>.
 
-In perl a particular namespace can be used either to simply collect a bunch of
-variables and subroutines or to implement a complete class. The ways in that
-you can use a C<Stash> instance in javascript are diferent.
+In perl a particular namespace can be used for diferent things. From simply to
+collect a bunch of variables and subroutines, to implement a complete class, or
+can act as a class "broker" when its static methods are contructors for other
+classes.
+The ways in which you can use C<Stash> instances in javascript are diferent too.
 
 In fact a perl namespace can be exposed to javascript without binding the
-associated C<Stash> to any property in your global object. Making it invisible
-and its use transparent. That whats happens when a perl object enters
-javascript land and you call its instance methods.
+associated C<Stash> instance into any property in your global object,
+making it invisible and its use transparent. That whats happens when
+a perl object enters javascript land and you call its instance methods.
 
 =head1 Javascript interface
 

@@ -162,15 +162,39 @@ __END__
 
 =head1 NAME
 
-JSP::PerlClass - Create native javascript clases in Perl
+JSP::PerlClass - Create native JavaScript classes in Perl
 
-=head1 Constructor
+=head1 INTRODUCTION
+
+If you known what a "native class" is you can jump to L</INTERFACE> now. If
+not, let me introduce you to a few importat concepts that you need to
+understand well if you think that you need the services provided by
+JSP::PerlClass.
+
+JavaScript, the language, doesn't really have I<classes>. It is a I<prototype
+based object oriented> language. When somebody talks about a "class", they are
+normally talking about a function that is meant to be called as a constructor,
+using the C<new> operator.
+
+The result of calling a constructor is a new object. This new object inherits
+the I<prototype> property of the constructor as the head of its I<prototype
+chain>. This way the new object "inherits" all properties and methods of its
+creator's I<prototype>. All objects sharing the same I<prototype chain> can be
+said to form a "class".
+
+The SpiderMonkey engine uses the concept of I<native class> to refer to the
+mechanism which you can use to install hooks into the normal processing of
+JavaScript object operations.
+
+=head1 INTERFACE
+
+=head2 Constructor
 
 =over 4 
 
 =item new ( %args )
 
-Create a new native js class.
+Create a new native JavaScript class.
 
 It expects the following arguments
 
@@ -247,7 +271,7 @@ A bitmask of attributes for the class. Valid attributes are:
 
 =item JS_CLASS_NO_INSTANCE
 
-Makes the class throw an exception if javascript tries to instantiate the
+Makes the class throw an exception if JavaScript tries to instantiate the
 class.
 
 =back

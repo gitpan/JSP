@@ -187,7 +187,7 @@ If not I<file> given, its starts in interactive mode.
 Your script should be written in javascript syntax and has available all features of
 the SpiderMonkey engine, see L<https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference>
 
-Also jsp provides all the services documented in L<JavaScrip::Runtime::Stock>
+Also jsp provides all the services documented in L<JSP::Runtime::Stock>
 plus the following:
 
 =over 4

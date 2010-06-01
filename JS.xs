@@ -242,6 +242,8 @@ SV *
 jsvisitor(pcx, sv)
     JSP::Context pcx;
     SV *sv
+    ALIAS:
+    _isjsvis = 1
     CODE:
 	RETVAL = NULL;
 	if(SvOK(sv) && SvROK(sv) && (sv = SvRV(sv)) && SvMAGICAL(sv)) {
@@ -253,19 +255,27 @@ jsvisitor(pcx, sv)
 		  (jsvis = (jsv_mg *)mg->mg_ptr) &&
 		  jsvis->pcx == pcx
 		) {
-		    JSObject *object = jsvis->object;
-		    SV *robj = newSV(0);
-		    SV *rjsv = newSV(0);
-		    sv_setref_pv(robj, PJS_RAW_OBJECT, (void*)object);
-		    sv_setref_iv(rjsv, PJS_RAW_JSVAL, (IV)OBJECT_TO_JSVAL(object));
-		    RETVAL = PJS_call_perl_method(jsvis->pcx->cx,
-			"__new",
-			sv_2mortal(newSVpv("JSP::Visitor", 0)),	// package
-			sv_2mortal(robj),			// content
-			sv_2mortal(rjsv),			// jsval
-			NULL
-		    );
-		    SvREFCNT_inc_void_NN(RETVAL);
+		    if(!ix) {
+			AV *avbox;
+			SV **myref;
+			JSObject *object = jsvis->object;
+			SV *robj = newSV(0);
+			SV *rjsv = newSV(0);
+			sv_setref_pv(robj, PJS_RAW_OBJECT, (void*)object);
+			sv_setref_iv(rjsv, PJS_RAW_JSVAL, (IV)OBJECT_TO_JSVAL(object));
+			RETVAL = PJS_call_perl_method(jsvis->pcx->cx,
+			    "__new",
+			    sv_2mortal(newSVpv("JSP::Visitor", 0)),	// package
+			    sv_2mortal(robj),			// content
+			    sv_2mortal(rjsv),			// jsval
+			    NULL
+			);
+			avbox = (AV *)SvRV(SvRV(RETVAL));
+			myref = av_fetch(avbox, 6, 1); /* Overload Array cache slot */
+			sv_setsv(*myref, ST(1));
+			sv_rvweaken(*myref);
+			SvREFCNT_inc_void_NN(RETVAL);
+		    } else RETVAL = &PL_sv_yes;
 		    break;
 		}
 		else mg = mg->mg_moremagic;

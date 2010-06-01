@@ -276,7 +276,7 @@ JSP::Context - An object in which we can execute javascript
   my $ctx = JSP::Runtime->new->create_context();
 
   # Add a function callable from javascript
-  $ctx->bind_function(print => sub { print @_; });
+  $ctx->bind_function(say => sub { print @_; });
 
   my $result = $ctx->eval($javascript_source);
 
@@ -284,34 +284,9 @@ JSP::Context - An object in which we can execute javascript
 
 To interact with the SpiderMonkey javascript engine you need a JSP::Context
 instance. To create one you can use the method L<JSP::Runtime/create_context>
-or obtain a "stock" one with L<JSP/stock_context>.
+or obtain the "stock" one with L<JSP/stock_context>.
 
 =head1 INTERFACE
-
-=head2 CLASS METHODS
-
-There are available the following class methods
-
-=over 4
-
-=item find ( $ContextId )
-
-Returns the C<JSP::Context> object associated with a given I<$ContextId>
-if exists or C<undef> if not.
-
-See L</id>.
-
-=item current ( )
-
-Returns the current JSP::Context object.
-
-To be used by perl subroutines designed to be called by javascript land when they
-need the context with in they are being called.
-
-When there aren't an active context, it dies with the error
-"Not in a javascript context".
-
-=back
 
 =head2 INSTANCE METHODS
 
@@ -329,15 +304,15 @@ $ctx->eval('({})') >>
 
 =item get_controller ( )
 
-Returns the L<Javascript::Controller> controller associated with the JavaScript
+Returns the L<JSP::Controller> controller associated with the JavaScript
 context.
 
 =item bind_value ( $path => $value )
 
-Defines a property with a given $name and $value.
+Defines a property with the given I<$path> and I<$value>.
 
-C<$path> is a string that reference a property in the global object or a path to
-deep properties, creating empty Objects for any missing.
+I<$path> is a string that reference a property in the global object or a path to
+deeper properties, creating empty Objects for any missing.
 
 For example:
 
@@ -347,13 +322,13 @@ For example:
                                            # and set 'foo.bar' to $value
 
 Trying to redefine an already existing property throws an exception, i.e. the last
-component of $name must not exists.
+component of I<$path> must not exists.
 
 Returns C<$value>
 
 =item bind_object ( $path => $value )
 
-The same as C<bind_value> above, but check that $value is an object (i.e. a
+The same as L</bind_value> above, but check that I<$value> is an object (i.e. a
 blessed reference), and throws otherwise.
 
 =item bind_function ( name => $path, func => $subroutine )
@@ -372,7 +347,7 @@ the future.
 Calls C<bind_value> above for every pair of its arguments.  Allowing you to mass
 populate the context.
 
-=item unbind_value ( $name )
+=item unbind_value ( $path )
 
 Remove a property from the context or a specified object.
 
@@ -380,8 +355,8 @@ Remove a property from the context or a specified object.
 
 =item call ( $function, @arguments )
 
-Calls the function named I<$name> or the B<JSP::Function>-object
-I<$function> and passes the rest of the arguments to the javascript function.
+Calls the JavaScript function named I<$name> or the L<JSP::Function> instance
+I<$function> and passes the rest of the arguments to the function.
 
 =item can ( $name )
 
@@ -408,12 +383,13 @@ Compiles the javascript code in I<$file_name>, returns a
 L<JSP::Script> instance that can be executed over and over again without
 paying the compilation overhead every time.
 
-If a compilation error occurs returns undef and sets $@.
+If a compilation error occurs returns C<undef> and sets C<$@>.
 
 =item eval ( $source )
 
 Evaluates the javascript code given in I<$source> and returns the result from
-the last statement.
+the last statement. Any uncaught exception in JavaScript will cause a C<croak>.
+See L</RaiseExceptions>
 
 =item eval_file ( $path )
 
@@ -421,7 +397,7 @@ Evaluates the javascript code in the file specified by I<$path> and returns the
 result from the last statement.
 
 If there is a compilation error (such as a syntax error) or an uncaught
-exception is thrown in javascript this method returns undef and $@ is set.
+exception is thrown in javascript this method returns C<undef> and C<$@> is set.
 
 =item bind_class ( $jsclass )
 
@@ -470,12 +446,44 @@ version of your runtime.
 
 =back
 
-=head2	Context options
+=head2 CLASS METHODS
+
+There are available the following class methods
+
+=over 4
+
+=item find ( $ContextId )
+
+Returns the C<JSP::Context> object associated with a given I<$ContextId>
+if exists or C<undef> if not.
+
+See L</id>.
+
+=item current ( )
+
+Returns the current JSP::Context object.
+
+To be used by perl subroutines designed to be called by javascript land when
+they need the context with in they are being called.
+
+When there aren't an active context, it dies with the error
+"Not in a javascript context".
+
+=item jsvisitor (REFERENCE_TO_SOMETHING)
+
+Returns the L<JSP::Visitor> associated to the perl "thing" for which
+I<REFERENCE_TO_THING> is a reference for, if any. Otherwise returns C<undef>.
+
+I<REFERENCE_TO_SOMETHING> can be a reference to anything.
+
+=back
+
+=head2	CONTEXT OPTIONS
 
 There are a few options that change the operation of the context,
 those can be manipulated using the context handle as a HASH reference,
 all options are booleans so any value setted will be TRUE or FALSE as by
-perl rules and can be made C<local> for temporarilly changes.
+perl rules and can be made C<local> for localized changes.
 
   {
     local $ctx->{OptionFoo} = 1;
@@ -491,9 +499,9 @@ The currently defined options are:
 
 =item AutoTie
 
-If TRUE the wrapped instances of Array and Object, when returned to perl will
-be automatically tied in real perl HASHes and ARRAYs so you perl code will not
-see instances of L<JSP::Object> or L<JSP::Array> unless you
+If TRUE the wrapped instances of C<Array> or C<Object> when returned to
+perl will be automatically I<tied> in real perl ARRAYs or HASHes, and your perl
+code will not see instances of L<JSP::Object> or L<JSP::Array> unless you
 explicitly use the C<tied> perl function.
 
 When FALSE the wrapper instances will be returned directly.
@@ -502,16 +510,16 @@ The default value is TRUE
 
 =item ConstantsValue
 
-If TRUE L<perlsub/"Constant Functions"> defined in perl namespaces, when reflected
-to javascript will be seen as true constants values. When FALSE they will be seen as
-normal functions, so to obtain its values they must be called.
+If TRUE perl's "Constant Functions" defined in perl namespaces, when reflected
+to javascript will be seen as true constants attributes. When FALSE they will
+be seen as normal functions, so to obtain its values they must be called.
 
 The default value is TRUE
 
 =item ConvertRegExp
 
-If TRUE all instances of javascript C<RegExp> will be converted to perl RegExp,
-when FALSE they will be wrapped in instances on L<JSP::Object> in the
+If TRUE all instances of javascript C<RegExp> will be converted to perl
+RegExp, when FALSE they will be wrapped in L<JSP::Object> instances in the
 normal way.
 
 The default value is TRUE
@@ -519,8 +527,8 @@ The default value is TRUE
 =item RaiseExceptions
 
 When TRUE all I<untrapped> exceptions in javascript space will raise a perl
-fatal exception.  Set to FALSE to revert to the behavior of previous versions
-that only set C<$@> and returns C<undef>.
+fatal exception.  Set it to FALSE cause that exceptions results in only setting
+C<$@> and the operation returns C<undef>.
 
 The default value is TRUE
 
@@ -530,7 +538,7 @@ Warn on dubious practice. Defaults to FALSE.
 
 =item XMLEnable
 
-In E4X (ECMAScript for XML) parse E<lt>!-- --E<gt> as a token.
+In E4X (ECMAScript for XML) parse C<E<lt>!-- --E<gt>> as a token.
 Defaults to TRUE.
 
 =item JITEnable
@@ -574,10 +582,6 @@ instance of I<this>, or the global object if I<this> is NULL. The argument
 I<function> can either be a string (SVt_PV) or an C<JSP::Function>
 object. Returns the return value from the called function. If the function
 doesn't exist or a uncaught exception is thrown it returns undef and sets $@.
-
-=item jsc_call_in_context ( PJS_Context *context, SV *function, SV *args, SV *rcx, char *class)
-
-TBD or removed!
 
 =item jsc_can ( PJS_Context *context, char *name )
 
@@ -646,10 +650,6 @@ Set context flags
 =item jsc_get_flag ( PJS_Context *ctx, flag )
 
 Get context flags
-
-=item jsvisitor (PJS_Context *ctx, REFERENCE )
-
-TBD
 
 =back
 

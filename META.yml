@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:                JSP
-version:             0.99_07
-abstract:            A bridge between perl and javascript languajes
+version:             0.99_08
+abstract:            A bridge between Perl and JavaScript languajes
 license:             perl
 author:              
     - Salvador Ortiz <sortiz@cpan.org>

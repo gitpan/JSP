@@ -128,7 +128,7 @@ perlsub_as_constructor(
 	JSObject *constructor;
 	if(JSVAL_IS_OBJECT(*vp) && (constructor = JSVAL_TO_OBJECT(*vp)) &&  
 	   PJS_GET_CLASS(cx, constructor) == &perlsub_class) {
-	    const char *package;
+	    /* TODO: Change the constructor 'name' */
 	    jsval temp;
 	    JSObject *stash = JS_GetPrototype(cx, obj);
 	    JS_SetPrototype(cx, stash, JS_GetPrototype(cx, constructor));

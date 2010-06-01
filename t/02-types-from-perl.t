@@ -1,5 +1,5 @@
 #!perl
-use Test::More tests => 58;
+use Test::More tests => 62;
 
 use strict;
 use warnings;
@@ -8,6 +8,7 @@ use utf8;
 use JSP;
 
 my $rt1 = JSP::Runtime->new();
+my $okvis;
 {
 my $cx1 = $rt1->create_context();
 
@@ -173,7 +174,13 @@ $cx1->call(test_other => \"string", \1000);
     $cx1->call(test_other => \($string, $number));
 }
 
-ok(JSP::jsvisitor(\&ok), "A visitor");
+# Test a little more jsvisitor machinery
+is(JSP::jsvisitor(\&ok), $cx1->id, 'ok is a visitor');
+ok(($okvis = $cx1->jsvisitor(\&ok)), "Can get its wrapper");
+isa_ok($okvis, 'JSP::Visitor');
+ok($okvis->VALID, "Is valid");
 }
 ok(!JSP::jsvisitor(\&ok), "But not now");
+ok(!$okvis->VALID, "Visitor invalidated\n");
+
 ok(1, "All done");

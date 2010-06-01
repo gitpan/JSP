@@ -1,5 +1,6 @@
 CREDITS
 Changes
+JSP.spec
 JS.h
 JS.xs
 Object.xs
@@ -44,6 +45,7 @@ dev_tests/roundtrip.pl
 dev_tests/error.pl
 lib/JSP.pm
 lib/JSP/Array.pm
+lib/JSP/Boolean.pm
 lib/JSP/Boxed.pm
 lib/JSP/Context.pm
 lib/JSP/Controller.pm
@@ -59,8 +61,8 @@ lib/JSP/PerlSub.pm
 lib/JSP/Runtime.pm
 lib/JSP/Script.pm
 lib/JSP/Stash.pm
+lib/JSP/Visitor.pm
 lib/JSP/TrapHandler.pm
-lib/JSP/Boolean.pm
 lib/JSP/Runtime/Stock.pm
 t/00-init.t
 t/01-types-from-js.t

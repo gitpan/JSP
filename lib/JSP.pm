@@ -8,7 +8,7 @@ use Carp;
 
 our $VERSION;
 BEGIN {
-    $VERSION = "0.99_07";
+    $VERSION = "0.99_08";
     our @ISA = qw(DynaLoader);
     DynaLoader::bootstrap('JSP', $VERSION);
 }
@@ -84,7 +84,7 @@ __END__
 
 =head1 NAME
 
-JSP - A bridge between perl and javascript languajes
+JSP - A bridge between Perl and JavaScript languajes
 
 =head1 SYNOPSIS
 
@@ -452,10 +452,10 @@ C<perl-javascript-subscribe@perl.org>
 
 See L<CREDITS>
 
-=head1 BUGS AND LIMITATIONS
+=head1 BUGS
 
-Please report any bugs or feature requests to C<bug-javascript@rt.cpan.org>, or
-through the web interface at L<http://rt.cpan.org>.
+This is a pre-release version, please submit any questions, bug reports,
+comments, feature requests, etc., to  Salvador Ortiz <sortiz@cpan.org>
 
 =head1 AUTHORS
 

@@ -108,11 +108,11 @@ __END__
 
 =head1 NAME
 
-JSP::Object - Reference to a javascript Object
+JSP::Object - Reference to a JavaScript Object
 
 =head1 DESCRIPTION
 
-Besides primitives everything else in javascript is an object. This class (or
+Besides primitives everything else in JavaScript is an object. This class (or
 one of its subclasses) encapsulate a I<reference> to them.
 
     $adate = $ctx->eval(' new Date() ');
@@ -121,14 +121,15 @@ one of its subclasses) encapsulate a I<reference> to them.
 
 =head1 SIMPLE INTERFACE
 
-Objects in javascript resemble perl HASHes, so by dafault and for compatibility
-with previous versions, for almost simple javascript objects, you don't see the
-JSP::Object instance wrapper, instead the JSP::Object instance
-will be converted, via L<perlfunc/tie> to perl HASHes and returned as
-HASH-references.
+Objects in JavaScript resemble perl HASHes. By default and for transparency to
+unaware perl code, for the I<most simple> JavaScript objects, you won't see the
+JSP::Object instance wrapper. Instead the JSP::Object instance will be
+converted, via L<perlfunc/tie>, into perl HASHes and returned as
+HASH-references.  So to access or modify the object properties you use the
+regular perl HASH operations and functions.
 
-So to access or modify the object properties you use the regular perl HASH
-operations and functions.
+By "most simple" in the last paragraph we're referring to all those objects
+which its constructor is C<Object>.
 
     ...
     $obj = $ctx->eval('v = { foo:4, bar:{}, baz:true }; v;');
@@ -139,7 +140,7 @@ operations and functions.
     print keys %$obj;               # foo bar baz
     print exists $obj->{bar}{fob};  # FALSE
 
-All those HASHes are I<alive>, thats it, they refer to the original javascript
+All those HASHes are I<alive>, thats it, they refer to the original JavaScript
 object, so if you modify them on one side, you are modifying both sides.
 
     $obj->{bar}{fob} = 'hi';
@@ -156,13 +157,13 @@ C<$obj>.
 You need to use:
 
     my $func = $obj->{toString};
-    $func->call(...);              # $func isa L<JSP::Function>
+    $func->call(...);              # $func isa JSP::Function
 
 The automatic conversion of JSP::Object instances into HASH references
 can be controled per context, via the L<JSP::Context/AutoTie> option.
 
 When C<AutoTie> is TRUE, the default, and you obtained a HASH reference, but
-you need the underlaying JSP::Object instance, it can get it using
+you need the underlaying JSP::Object instance, you can get it using
 L<perlfunc/tied>.
 
     my $jsobj = tied %$obj;
@@ -173,10 +174,10 @@ JSP::Object.
 
 =head1 INSTANCE METHODS
 
-To avoid name clashes with the methods defined for an object in javascript,
+To avoid name clashes with the methods defined for an object in JavaScript,
 instances of JSP::Object only define a minimun of methods, all in
 UPPERCASE, so any other method called will be proxied to the original
-javascript object.
+JavaScript object.
 
 =over 4
 
@@ -186,9 +187,9 @@ javascript object.
 
 Get the property named PROP from the object.
 
-Remember that by javascript rules, the value returned not necessarily is an
+Remember that by JavaScript rules, the value returned not necessarily is an
 B<own property> of the object, it may come from the prototype chain.  Also, if
-in javascript the object has any B<getter> associated with that name, the
+in JavaScript the object has any B<getter> associated with that name, the
 getter will be called.
 
 Because overloading, you don't need to call the FETCH method, you can just say
@@ -200,7 +201,7 @@ C<< $jsobj->{foo} >>.
 
 Set the property named PROP to VALUE in the object.
 
-If the javascript object has any B<setter> associated with that name, the
+If the JavaScript object has any B<setter> associated with that name, the
 setter will be called, as expected.
 
 Because overloading, you don't need to call the STORE method, you can just say
@@ -218,15 +219,15 @@ Because overloading, you can just say C<< delete $jsobj->{foo} >>
 
   if($jsobj->EXISTS('foo')) { ... }
 
-Returns a B<true> value if a property named PROP exists in object or, by
-javascript rules, I<in any object in the prototype chain> of the object.
-Otherwise it returns a B<false> value.
+Returns a TRUE value if a property named PROP exists in object or, by
+JavaScript rules, I<in any object in the prototype chain> of the object.
+Otherwise it returns FALSE.
 
 Because overloading, you can just say C<< if(exists $jsobj->{foo}) { ... } >>
 
-Because the B<prototype based> nature of javascript, if you need to known if
+Because the B<prototype based> nature of JavaScript, if you need to known if
 the object contains the specified property as a direct property and not
-inherited through the prototype chain you must use the javascript function
+inherited through the prototype chain you must use the JavaScript function
 C<hasOwnProperty>
 
    if( $jsobj->hasOwnProperty('foo') ) { ... }
