@@ -22,6 +22,6 @@ T_PTROBJ
 
 OUTPUT
 T_jsval
-	if(!JSVALToSV(cx, $var, &$arg, 1) && PJS_report_exception(pcx))
+	if(!PJS_ReflectJS2Perl(cx, $var, &$arg, 1) && PJS_report_exception(pcx))
 	    XSRETURN_UNDEF;
 	sv_2mortal($arg);

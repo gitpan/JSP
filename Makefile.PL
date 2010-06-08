@@ -165,6 +165,7 @@ WriteMakefile(
     CC              => $CC,
     MYEXTLIB        => $myextlib,
     ($CC eq 'c++' ? (XSOPT => '-C++', LD => $CC) : ()),
+    clean => { FILES => 'JS_Env.h' },
 );
 
 package MY;

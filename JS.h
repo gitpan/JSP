@@ -79,7 +79,7 @@
 #include "PJS_Common.h"
 #include "PJS_Call.h"
 #include "PJS_Context.h"
-#include "PJS_TypeConversion.h"
+#include "PJS_Reflection.h"
 #include "PJS_Exceptions.h"
 #include "PJS_PerlArray.h"
 #include "PJS_PerlHash.h"

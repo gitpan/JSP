@@ -1,4 +1,4 @@
-%define pmod_ver 0.99_08
+%define pmod_ver 0.99_09
 
 Summary: Perl JSP module, a bridge between Spidermonkey javascript engine and perl
 Name: perl-JSP

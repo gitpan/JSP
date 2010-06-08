@@ -22,7 +22,7 @@ wrapped as an instance of C<PerlScalar>, Blessed ones will be normally a C<PerlO
 
 =head2 Contructor
 
-You can contruct from javascript new SCALAR references.
+You can construct from javascript new SCALAR references.
 
 =over 4
 

@@ -167,7 +167,7 @@ JSP::PerlClass - Create native JavaScript classes in Perl
 =head1 INTRODUCTION
 
 If you known what a "native class" is you can jump to L</INTERFACE> now. If
-not, let me introduce you to a few importat concepts that you need to
+not, let me introduce you to a few important concepts that you need to
 understand well if you think that you need the services provided by
 JSP::PerlClass.
 

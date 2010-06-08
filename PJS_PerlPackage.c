@@ -64,7 +64,7 @@ perlpackage_add(
 
     ENTER; SAVETMPS;
     PJS_DEBUG2("Want add '%s' in '%s'\n", key, HvNAME((HV *)SvRV(ref)));
-    if(!JSVALToSV(cx, *vp, &sv, 0))
+    if(!PJS_ReflectJS2Perl(cx, *vp, &sv, 0))
 	ok = JS_FALSE;
 
     if(ok && sv_isobject(sv_2mortal(sv)) && sv_derived_from(sv, PJS_OBJECT_PACKAGE)) {
@@ -120,7 +120,7 @@ static JSBool perlpackage_set(
 	if(JS_GetProperty(cx, obj, PJS_EXPORT_PROP, &temp) &&
 	   JS_ValueToBoolean(cx, temp, &can) && !can)
 	    return JS_TRUE; /* Export vetoed */
-	if(!JSVALToSV(cx, *vp, &nsv, 1)) 
+	if(!PJS_ReflectJS2Perl(cx, *vp, &nsv, 1)) 
 	    return JS_FALSE;
 	name = form_name(package, key);
 	PJS_DEBUG1("In PCS set for $%s\n", name);
@@ -161,7 +161,7 @@ static JSBool perlpackage_get(
 	PJS_DEBUG1("In PCS get for $%s\n", name);
 	SV *sv = get_sv(name, 0);
 	Safefree(name);
-	if(sv) return PJS_ConvertPerlToJSType(cx, obj, sv, vp);
+	if(sv) return PJS_ReflectPerl2JS(cx, obj, sv, vp);
     }
     return JS_TRUE;
 }
@@ -243,7 +243,7 @@ static JSBool perlpackage_resolve(
 	    sv = gv_const_sv(*gvp);
     }
     if(sv) {
-	if(PJS_ConvertPerlToJSType(cx, obj, sv, &temp) &&
+	if(PJS_ReflectPerl2JS(cx, obj, sv, &temp) &&
 	   JS_DefineProperty(cx, obj, key, temp, NULL, NULL, 0)
 	)
 	    *objp = obj;
@@ -256,7 +256,7 @@ static JSBool perlpackage_resolve(
     if(gv) {
 	PJS_DEBUG("Method found\n");
 	// TODO: Make method resolution dynamic
-	if(PJS_ConvertPerlToJSType(cx, obj,
+	if(PJS_ReflectPerl2JS(cx, obj,
 	                           (sv = newRV_inc((SV *)GvCV(gv))), &temp) &&
 	   JS_DefineProperty(cx, obj, key, temp, NULL, NULL, 0))
 	    *objp = obj;
@@ -397,7 +397,7 @@ static JSBool perlobj_set(
 	sv_2mortal(svk);
 	if(hv_exists_ent((HV *)sv, svk, 0)) {
 	    SV *nsv;
-	    if(!JSVALToSV(cx, *vp, &nsv, 1)) ok = JS_FALSE;
+	    if(!PJS_ReflectJS2Perl(cx, *vp, &nsv, 1)) ok = JS_FALSE;
 	    if(ok && hv_store_ent((HV *)sv, svk, nsv, 0) == NULL) {
 		if(SvSMAGICAL((HV *)sv)) mg_set(nsv);
 		else ok = JS_FALSE; // TODO: Check error to report

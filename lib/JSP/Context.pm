@@ -44,8 +44,8 @@ sub eval {
 	my @caller = caller;
 	"$caller[0] line $caller[2]";
     };
-    if($^O eq 'MSWin32' && ref($source)) {
-	my $src = join('',<$source>);
+    if($^O eq 'MSWin32' && ref $source) {
+	my $src = join '', <$source>;
 	$source = $src;
     }
     $self->jsc_eval(undef, $source, $name);
@@ -69,13 +69,13 @@ sub current {
 }
 
 sub check_privileges {
-    die("Not enougth privileges\n") if $CURRENT && current->{Restricted};
+    die "Not enough privileges\n" if $CURRENT && current->{Restricted};
 }
 
 sub call {
     my $self     = shift;
     my $function = shift;
-    
+
     if($] > 5.009) { # Avoid one stack frame
 	@_ = ($self, undef, $function, [ @_ ]);
 	goto &jsc_call;
@@ -91,11 +91,11 @@ sub bind_value {
     my $dest = pop @paths;
     my $this = $self->get_global;
     for(@paths) {
-	$this = defined($this->{$_}) 
+	$this = defined($this->{$_})
 	    ? $this->{$_}
 	    : ($this->{$_} = $self->new_object($this));
 	my $isvis = $self->jsvisitor($this) or next;
-	$this = $isvis
+	$this = $isvis;
     }
     croak "${name} already exists, unbind it first" if exists $this->{$dest};
     $this->{$dest} = $object;
@@ -209,7 +209,7 @@ sub compile_file {
         my $options = $self->jsc_get_options;
         return grep { $options & $options_by_tag{$_} } keys %options_by_tag;
     }
-    
+
     sub has_options {
         my $self = shift;
     
@@ -406,7 +406,7 @@ Bind a native class created L<with JSP::PerlClass>
 =item check_privileges ( )
 
 To be used inside perl code called from javascript. Check that the
-context isn't restricted, otherwise dies with the error "Not enought privileges";
+context isn't restricted, otherwise dies with the error "Not enough privileges";
 
 =item set_branch_handler ( $handler )
 

@@ -175,7 +175,7 @@ JSP::Object.
 =head1 INSTANCE METHODS
 
 To avoid name clashes with the methods defined for an object in JavaScript,
-instances of JSP::Object only define a minimun of methods, all in
+instances of JSP::Object only define a minimum of methods, all in
 UPPERCASE, so any other method called will be proxied to the original
 JavaScript object.
 
@@ -230,7 +230,7 @@ the object contains the specified property as a direct property and not
 inherited through the prototype chain you must use the JavaScript function
 C<hasOwnProperty>
 
-   if( $jsobj->hasOwnProperty('foo') ) { ... }
+    if( $jsobj->hasOwnProperty('foo') ) { ... }
 
 =item CLASS_NAME
 
@@ -238,16 +238,16 @@ Returns the native class name of the object
 
 =item HASH_REF
 
-Returns a HASH reference, tied to the underlayin JSP::Object.
+Returns a HASH reference, tied to the underlaying JSP::Object.
 
 The reference is cached, so every time you call HASH_REF, you obtain the same
 reference.  This reference is the same used for the L</"SIMPLE INTERFACE">
-above and for L<"OVERLOADED OPERATIONS"> below, so you seeldom need to call
+above and for L<"OVERLOADED OPERATIONS"> below, so you seldom need to call
 this method.
 
 =item I<foo> ( ARGS )
 
-   $jsobj->foo(@someargs);
+    $jsobj->foo(@someargs);
 
 Any other method I<foo> results in a call to the object's method of the same
 name.

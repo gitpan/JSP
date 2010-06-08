@@ -107,7 +107,7 @@ PJS_JSString2SV(
 
 /* Converts perl values to equivalent JS values */
 JSBool
-PJS_ConvertPerlToJSType(
+PJS_ReflectPerl2JS(
     JSContext *cx,
     JSObject *pobj,
     SV *ref,
@@ -260,7 +260,7 @@ SV* PJS_GetPassport(
  * Returns a new SV, REFCNT_dec is caller's responsability
  */
 JSBool
-JSVALToSV(
+PJS_ReflectJS2Perl(
     JSContext *cx,
     jsval value,
     SV** sv,

@@ -30,7 +30,7 @@ perlarray_get(
         v = av_fetch(av, ix, 0);
         if(v) {
 	    if(SvGMAGICAL(*v)) mg_get(*v);
-            ok = PJS_ConvertPerlToJSType(cx, obj, sv_mortalcopy(*v), vp);
+            ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(*v), vp);
         }
         else {
             JS_ReportError(cx, "Failed to retrieve element at index: %d", ix);
@@ -58,7 +58,7 @@ perlarray_set(
     if(JSVAL_IS_INT(id)) {
         IV ix = JSVAL_TO_INT(id);
         SV *sv;
-        if(!JSVALToSV(cx, *vp, &sv, 1)) {
+        if(!PJS_ReflectJS2Perl(cx, *vp, &sv, 1)) {
             JS_ReportError(cx, "Failed to convert argument to Perl");
             return JS_FALSE;
         }
@@ -185,7 +185,7 @@ perlarray_push(
 
     for(tmp = 0; tmp < argc; tmp++) {
 	SV *sv;
-	if(!JSVALToSV(cx, argv[tmp], &sv, 1)) {
+	if(!PJS_ReflectJS2Perl(cx, argv[tmp], &sv, 1)) {
 	    JS_ReportError(cx, "Failed to convert argument %d to Perl", tmp);
 	    return JS_FALSE;
 	}
@@ -214,7 +214,7 @@ perlarray_unshift(
         av_unshift(av, argc);
         for(tmp = 0; tmp < argc; tmp++) {
             SV *sv;
-            if(!JSVALToSV(cx, argv[tmp], &sv, 1)) {
+            if(!PJS_ReflectJS2Perl(cx, argv[tmp], &sv, 1)) {
                 JS_ReportError(cx, "Failed to convert argument %d to Perl", tmp);
                 return JS_FALSE;
             }
@@ -251,7 +251,7 @@ perlarray_shift(
         return JS_TRUE;
     }
     ENTER; SAVETMPS;
-    ok = PJS_ConvertPerlToJSType(cx, obj, sv_mortalcopy(sv), rval);
+    ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(sv), rval);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -279,7 +279,7 @@ perlarray_pop(
         return JS_TRUE;
     }
     ENTER; SAVETMPS;
-    ok = PJS_ConvertPerlToJSType(cx, obj, sv_mortalcopy(sv), rval);
+    ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(sv), rval);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -359,7 +359,7 @@ PerlArray(
 
     av_extend(av, argc);
     for(arg = 0; arg < argc; arg++) {
-	if(!JSVALToSV(cx, argv[arg], &sv, 1) ||
+	if(!PJS_ReflectJS2Perl(cx, argv[arg], &sv, 1) ||
 	   !av_store(av, arg, sv)) goto fail;
     }
 

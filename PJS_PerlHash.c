@@ -58,7 +58,7 @@ perlhash_get(
     he = hv_fetch_ent(hv, svk, 0, 0);
     if(SvGMAGICAL(hv)) mg_get(HeVAL(he));
     if(he)
-        ok = PJS_ConvertPerlToJSType(cx, obj, sv_mortalcopy(HeVAL(he)), vp);
+        ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(HeVAL(he)), vp);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -82,7 +82,7 @@ perlhash_set(
     if(!JSVAL_IS_STRING(id))
         return JS_TRUE;
 
-    if(!JSVALToSV(cx, *vp, &sv, 1))
+    if(!PJS_ReflectJS2Perl(cx, *vp, &sv, 1))
 	return JS_FALSE;
 
     svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
@@ -214,7 +214,7 @@ PerlHash(
 	JSString *jstr = JS_ValueToString(cx, argv[arg]);
 	if(!jstr) goto fail;
 	key = PJS_JSString2SV(jstr);
-	if(!JSVALToSV(cx, argv[arg+1], &sv, 1) ||
+	if(!PJS_ReflectJS2Perl(cx, argv[arg+1], &sv, 1) ||
 	   !hv_store_ent(hv, key, sv, 0)) goto fail;
 	sv_free(key);
     }

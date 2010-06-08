@@ -51,7 +51,7 @@ sub BarP::sub1 {
 my $rt1 = JSP::Runtime->new;
 {
 my $ctx = $rt1->create_context;
-$ctx->bind_value(like => \&like);
+$ctx->bind_all(is => \&is, like => \&like);
 
 ok(my $ctl = $ctx->get_controller, "JS <-> Perl controlled created");
 isa_ok($ctl, "JSP::Controller");
@@ -220,7 +220,7 @@ ok($ctx->eval(q|
 	pos = io.getpos();
 	io.print("This is line 3\n");
 	io.seek(0, 0); // To the begining
-	like(io.getline(), /line 1/, "Line 1");
+	is(io.read(4), 'Some', "line1: Some");
 	io.setpos(pos);
 	like(io.getline(), /line 3/, "Line 3");
 	io.eof();

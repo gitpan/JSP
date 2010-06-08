@@ -9,7 +9,7 @@ JSBool PJS_report_exception(PJS_Context *pcx) {
     if(!SvTRUE(ERRSV)) {
 	if(!JS_GetPendingException(cx, &val)) return JS_FALSE;
 	JS_ClearPendingException(cx);
-	if(!JSVALToSV(cx, val, &sv, 1))
+	if(!PJS_ReflectJS2Perl(cx, val, &sv, 1))
 	    croak("Failed to convert exception to perl object");
  	SvSetSV(ERRSV, sv);
 	sv = NULL;

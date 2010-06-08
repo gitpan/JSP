@@ -1,5 +1,8 @@
 #!./bin/jsp
+
 say('Hello World!');
-say('Are you '+Sys.Env.USER+'?');
+
+say('Are you ' + Sys.Env.USER + '?');
+
 if(Sys.Argv.length)
-    say('My argv: '+Sys.Argv.toString());
+    say('My argv: ' + Sys.Argv.toString());

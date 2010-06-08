@@ -13,11 +13,11 @@ Every perl namespace when exposed to JavaScript either automatically or by the
 methods of the  L<JSP::Controller> perl class is represented by an instance of a
 C<Stash>.
 
-In perl a particular namespace can be used for diferent things. From simply to
+In perl a particular namespace can be used for different things. From simply to
 collect a bunch of variables and subroutines, to implement a complete class, or
-can act as a class "broker" when its static methods are contructors for other
+can act as a class "broker" when its static methods are constructors for other
 classes.
-The ways in which you can use C<Stash> instances in javascript are diferent too.
+The ways in which you can use C<Stash> instances in javascript are different too.
 
 In fact a perl namespace can be exposed to javascript without binding the
 associated C<Stash> instance into any property in your global object,
@@ -104,5 +104,4 @@ TBD
 TBD
 
 =back
-
 

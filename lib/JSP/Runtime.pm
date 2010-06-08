@@ -2,6 +2,8 @@ package JSP::Runtime;
 use strict;
 use warnings;
 
+use Carp;
+
 require JSP::Context;
 require JSP::Error;
 require JSP::Function;
@@ -9,8 +11,8 @@ require JSP::Array;
 require JSP::Controller;
 
 our @ISA = qw(JSP::RawRT);
-
 our $MAXBYTES = 1024 ** 2 * 4;
+our %Plugins = ();
 
 sub new {
     my $pkg = shift;
@@ -19,7 +21,16 @@ sub new {
 
 sub create_context {
     my $self = shift;
-    JSP::Context->new($self);
+    my $plugin = shift;
+    my $ctx = JSP::Context->new($self);
+    if($plugin) {
+	if($Plugins{$plugin}) {
+	    $Plugins{$plugin}->($ctx);
+	} else {
+	    croak "No plugin '$plugin' installed\n";
+	}
+    }
+    return $ctx;
 }
 
 my $stock_ctx;
@@ -27,10 +38,10 @@ sub JSP::stock_context {
     my($pkg, $stock) = @_;
     my $clone;
     if(!defined $stock_ctx) {
+	$stock ||= 'stock';
+	require JSP::Runtime::Stock if $stock eq 'stock';
 	my $rt = __PACKAGE__->new();
-	$clone = $stock_ctx = $rt->create_context();
-	require JSP::Runtime::Stock;
-	JSP::Runtime::Stock::_ctxcreate($clone);
+	$clone = $stock_ctx = $rt->create_context($stock);
 	Scalar::Util::weaken($stock_ctx);
     } else {
 	$clone = $stock_ctx;
@@ -57,7 +68,7 @@ JSP::Runtime - Runs contexts
 
     use JSP;
 
-    my $ctx = JSP::stock_context();
+    my $ctx = JSP->stock_context();
 
 =head1 DESCRIPTION
 
@@ -79,7 +90,7 @@ instances.
 Creates a new C<JSP::Runtime> object and returns it.
 
 If the I<$maxbytes> option is given, it's taken to be the number of bytes that
-can be allocated before garbage collection is run. If ommited defaults to 4MB.
+can be allocated before garbage collection is run. If omitted defaults to 4MB.
 
 =back
 
@@ -90,5 +101,20 @@ can be allocated before garbage collection is run. If ommited defaults to 4MB.
 =item create_context ()
 
 Creates a new C<JSP::Context> object in the runtime. 
+
+=back
+
+=head2 PACKAGE VARIABLES
+
+=over 4
+
+=item $MAXBYTES
+
+The default max number of bytes that can be allocated before garbage collection is run.
+Used when you don't pass a I<$maxbytes> parameter to L</new>.
+
+Useful to set the default before you call L<JSP/stock_context>.
+
+=back
 
 =cut

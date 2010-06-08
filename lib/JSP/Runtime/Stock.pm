@@ -70,6 +70,8 @@ sub _ctxcreate {
     $ctl->install('Sys.IO.File' => 'IO::File');
 }
 
+$JSP::Runtime::Plugins{stock} = \&_ctxcreate;
+
 1;
 __END__
 =head1 NAME
@@ -88,7 +90,7 @@ context, otherwise the method invocation throws an error.
 
 =item Sys                                          B<Object>
 
-Alias to the global object, so if in a diferent scope you need to reference
+Alias to the global object, so if in a different scope you need to reference
 any of the following services, you can use C<Sys.> as a prefix. Think in the 
 C<window> object when in the browser.
 
@@ -101,7 +103,7 @@ This object is an alias to perl's L<perlvar/%ENV>.
 
 =item IO                                           B<Object>
 
-Used to agregate all properties related to I/O
+Used to aggregate all properties related to I/O
 
 =item IO.File ( FILENAME [,MODE [, PERMS]] )  	   B<Constructor Function>
 

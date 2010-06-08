@@ -12,7 +12,7 @@ As described in L<JSP/"Round trip integrity"> all perl things that you pass
 I<by reference> to JavaScript land conserve their identity, no matter how
 much they have travelled between both interpreters. Thats what you expect.
 
-Upon enterin JavaScript land they will become JavaScript objects, and as such
+Upon entering JavaScript land they will become JavaScript objects, and as such
 they can be extended.
 
 For example, your ARRAYs visiting JavaScript, as C<PerlArray> instances, can be
@@ -33,7 +33,7 @@ used in JavaScript land.
 
 JSP::Visitor instances inherits from L<JSP::Object>. See that page for details.
 
-In adition, JSP::Visitor object have the following:
+In addition, JSP::Visitor object have the following:
 
 =over 4
 
@@ -57,11 +57,11 @@ reference somewhere.
 
 JSP::Visitor objects I<don't modify in any way> the life cycle of the object
 nor the life cycle of the perl thing.  if you hold a JSP::Visitor for a long
-time, the object can be garbage colleted in JavaScript, invalidating the
+time, the object can be garbage collected in JavaScript, invalidating the
 JSP::Visitor instance.
 
 You should use only lexical variables in a well defined scope for JSP::Visitor
-intances.
+instances.
 
-And unless you are playing "Alice in Wonderlad", never pass to JavaScript
+And unless you are playing "Alice in Wonderland", never pass to JavaScript
 a JSP::Visitor. JSP won't protect you for doing nasty things.

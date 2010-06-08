@@ -26,7 +26,7 @@ These objects have two important characteristics:
 
 =item *
 
-They are connected to their perl contrapart. Changes to this objects will be
+They are connected to their perl counterpart. Changes to this objects will be
 observable on the original perl HASH. If the hash has perl magic, for example
 if it is C<tied>, any access from javascript to the hash will invoke the
 associated magic in perl.

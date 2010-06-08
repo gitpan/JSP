@@ -1,7 +1,7 @@
 1.0  2010-05-XX
 
      This is a fork from Claes Jakobsson's JavaScript module.
-     Althought almost every area was revamped, we try hard to be fully backwards
+     Although almost every area was revamped, we try hard to be fully backward
      compatible, but you should read the documentation.
 
      The following are the most visible changes:

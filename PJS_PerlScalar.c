@@ -32,7 +32,7 @@ perlscalar_value(
     dTHX;
     SV *iref = (SV *)JS_GetPrivate(cx, obj);
     SV *ref = SvRV(iref);
-    return PJS_ConvertPerlToJSType(cx, obj, ref, rval);
+    return PJS_ReflectPerl2JS(cx, obj, ref, rval);
 }
 
 static JSPropertySpec perlscalar_props[] = {
@@ -59,10 +59,10 @@ PerlScalar(
     /* If the path fails, the object will be finalized */
     JS_SetPrivate(cx, obj, (void *)newRV(ref));
 
-    if(argc == 1 && !JSVALToSV(cx, argv[0], &ref, 1))
+    if(argc == 1 && !PJS_ReflectJS2Perl(cx, argv[0], &ref, 1))
 	return JS_FALSE;
 
-    return PJS_ConvertPerlToJSType(cx, JS_GetParent(cx, obj),
+    return PJS_ReflectPerl2JS(cx, JS_GetParent(cx, obj),
 	                           newRV_noinc(ref), rval);
 }
 

@@ -32,6 +32,50 @@ sub list {
     return keys %{$self};
 }
 
+my %tinc = ();
+my @texcep = qw(Exporter DynaLoader); # Not to be added
+sub _addtweaks {
+    my ($self, $package, $stash) = @_;
+    my ($realfilename, $search);
+    $search = $package;
+    $search =~ s/::/\//g;
+    my $tweaks = undef;
+    ITER: {
+	for my $prefix (@INC) {
+	    $realfilename = "$prefix/JSP/Tweaks/$search";
+	    if(-f "$realfilename.js") {
+		$tweaks = $self->__context->jsc_eval(
+			$stash, undef, "$realfilename.js"
+		); 
+		if($tweaks) {
+		    while(my($k, $v) = each %{$tweaks}) { $stash->{$k} = $v; }
+		}
+		last ITER;
+	    } elsif(-f "$realfilename.pm") {
+		#TODO
+	    }
+	}
+    }
+    $tinc{$package} = $tweaks;
+}
+
+sub _chktweaks {
+    my ($self, $package, $stash) = @_;
+    no strict 'refs';
+    return $tinc{$package} if exists $tinc{$package};
+    my $tweaks;
+    for my $supper ( @{ $package.'::ISA' } ) {
+	next if grep $_ eq $supper, @texcep; # Excepted
+	next if $self->{$supper}; # Already added
+	if(my $stweaks = _chktweaks($self, $supper, $self->add($supper))) {
+	    while(my($k, $v) = each %{$stweaks}) {
+		$stash->{Proxy}{$k} = $v; # Install supper's tweaks in Proxy
+	    }
+	}
+    }
+    _addtweaks($self, $package, $stash);
+}
+
 sub install {
     my $self = shift;
     my $inst = 0;
@@ -54,6 +98,7 @@ sub install {
 	} else {
 	    Carp::croak("Invalid \$mode $con in install");
 	}
+	_chktweaks($self, $package, $stash);
 	$inst++;
     }
     return $inst;
@@ -312,7 +357,7 @@ an instance of the special C<Stash> native class is created in the context. How
 you can use that particular namespace from javascript depends on how the
 C<Stash> instance or its properties are bound in javascript.
 
-See L<JSP::Stash> for details on C<Stash> intances.
+See L<JSP::Stash> for details on C<Stash> instances.
 
 This perl class allows you to make javascript land aware of perl packages and
 provides some utilities methods.
@@ -322,7 +367,7 @@ provides some utilities methods.
 You obtain the instance of a context's controller calling
 L<JSP::Context/get_controller>.
 
-   my $ctl = $context->get_controller;
+    my $ctl = $context->get_controller;
 
 With this you can use any of the following:
 
@@ -359,9 +404,9 @@ Returns a list with the names of packages available in javascript land.
     
 =item install ( I<BIND_OPERATION>, ... )
 
-Performs a serie of I<BIND_OPERATION>s in javascript land.
+Performs a series of I<BIND_OPERATION>s in javascript land.
 
-Every I<BIND_OPERATION> is an expresion of the form:
+Every I<BIND_OPERATION> is an expression of the form:
 
 =over 4
 
@@ -431,8 +476,8 @@ will do the right thing.
 
 =item * B<-1>
 
-When $mode is B<-1>, you want to bind the perl package in I<indirect> form.
-This form allows javascript to resolve method calls on I<bind> to subroutines
+When $mode is B<-1>, you want to bind the perl package in I<indirect> mode.
+This mode allows javascript to resolve method calls on I<bind> to subroutines
 defined in $package.
 
 Using the I<indirect> form will make plain function calls to those subroutines
@@ -472,6 +517,9 @@ that the C<PerlSub> objects associated to your perl subroutines won't get
 created in javascript until needed.
 
 =back
+
+Every I<BIND_OPERATION>, search for a I<"Tweaks file"> associated to the
+I<$package> added and if found loads it, see L<JSP::Tweaks> for details.
 
 To create a hierarchy of related properties you can pass to C<install> many
 I<BIND_OPERATION>s as follows:

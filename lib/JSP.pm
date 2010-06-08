@@ -8,7 +8,7 @@ use Carp;
 
 our $VERSION;
 BEGIN {
-    $VERSION = "0.99_08";
+    $VERSION = '1.00';
     our @ISA = qw(DynaLoader);
     DynaLoader::bootstrap('JSP', $VERSION);
 }
@@ -84,7 +84,7 @@ __END__
 
 =head1 NAME
 
-JSP - A bridge between Perl and JavaScript languajes
+JSP - A bridge between JavaScript and Perl languages
 
 =head1 SYNOPSIS
 
@@ -106,7 +106,7 @@ JSP - A bridge between Perl and JavaScript languajes
 	window.add(button);
 	window.show_all();
 	Gtk2.main();
-	say('That all folk!');
+	say("That's all folks!");
     |);
 
 =head1 INTRODUCTION
@@ -139,7 +139,7 @@ automagically reflected between both environments. All your perl HASHes, ARRAYs
 and objects can be used from javascript and all your javascript classes and
 objects can be used from Perl.
 
-You will be able to even define hibrid classes. Some of the methods defined in
+You will be able to even define hybrid classes. Some of the methods defined in
 Perl and others defined in javascript.
 
 This module is not a javascript compiler/interpreter but a bridge between
@@ -161,7 +161,7 @@ B<Create a context> inside which you'll be able to evaluate javascript code.
 The context holds a I<global object> with javascript's standard constructors
 and functions.
 
-You can create many diferent contexts each with diferent properties.
+You can create many different contexts each with different properties.
 
 For details on context creation see L<JSP::Runtime> and L<JSP::Context>
 
@@ -225,7 +225,7 @@ functions), so they may be called.
 See L<JSP::PerlArray>, L<JSP::PerlHash>,
 L<JSP::PerlScalar> and L<JSP::PerlSub> for details.
 
-All blessed references (perl objects) will be wrapped I<by default> as instaces
+All blessed references (perl objects) will be wrapped I<by default> as instances
 of C<PerlObject>, but you can make arrangements to use a different wrapper for
 specific perl classes. See L<PerlObject> and L<JSP::Context/bind_class>
 for details.
@@ -270,14 +270,14 @@ same object:
 
 =head1 EXCEPTION HANDLING
 
-In javascript a lot of operations can fail in many diferent ways. Even a
+In javascript a lot of operations can fail in many different ways. Even a
 single assignment can fail (remember that in javascript every variable is a
 "property" of something and there may be a getter involved which can throw an
 exception).
 
 When you are running javascript code, all I<untrapped> exceptions will be
 raised on the caller perl side using C<croak>, normally fatal. But you can
-trap them with perl's C<eval>, efectively converting javascript's exceptions
+trap them with perl's C<eval>, effectively converting javascript's exceptions
 into perl exceptions.
 
 Is such cases, in C<$@> you will get a L<JSP::Error> instance.
@@ -301,7 +301,7 @@ See L<JSP::Error> for more details
 
 =item C<JavaScript> by Claes Jakobsson
 
-Thougth the API are similar, there is a fundamental difference: L<JavaScript>
+Thought the API are similar, there is a fundamental difference: L<JavaScript>
 is mainly a "converter" between types, and this module is a true "reflector",
 so there are a few but important incompatibilities.
 
@@ -332,7 +332,7 @@ C<stock_context>.
 The first time you call C<stock_context> a new context is created, have
 its global object populated with some useful functions and values, and returned.
 
-Every subsecuent call to C<stock_context> returns the same context.
+Every subsequent call to C<stock_context> returns the same context.
 
 See L<JSP::Runtime::Stock> for details on how the context is populated.
 
@@ -359,13 +359,13 @@ C<%ClassMap> allows you to extend the wrapping system used by JSP.
 
     $JSP::ClassMap{Date} => 'My::Date';
 
-Althought javascript doesn't really have a notion of a "class", in SpiderMonkey
+Although javascript doesn't really have a notion of a "class", in SpiderMonkey
 exist the concept of "native classes". JSP uses the native class name
 for selecting a proper perl wrapper for javascript objects entering perl.
 
 That way, an C<Array> instance becomes a C<JSP::Array>, for example.
 
-JSP defines a few of such mappings to provide especialized wrappers for
+JSP defines a few of such mappings to provide specialized wrappers for
 some known classed, any other object becomes a simple L<JSP::Object>.
 
 If you create new wrapper classes, declare them adding an entry to
@@ -459,8 +459,19 @@ comments, feature requests, etc., to  Salvador Ortiz <sortiz@cpan.org>
 
 =head1 AUTHORS
 
+=begin man
+
  Salvador Ortiz <sortiz@cpan.org>
  Miguel Ibarra <mibarra@msg.com.mx>
+
+=end man
+
+=begin html
+
+Salvador Ortiz &lt;sortiz@cpan.org&gt;<br>
+Miguel Ibarra &lt;mibarra@msg.com.mx&gt;
+
+=end html
 
 =head1 LICENCE AND COPYRIGHT
 

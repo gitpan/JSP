@@ -13,7 +13,7 @@ PJS_EXTERN SV *
 PJS_GetPassport(JSContext *, JSObject *);
 
 PJS_EXTERN JSBool
-JSVALToSV(JSContext *, jsval, SV **, int);
+PJS_ReflectJS2Perl(JSContext *, jsval, SV **, int);
 
 PJS_EXTERN SV *
 PrimJSVALToSV(JSContext *, jsval);
@@ -25,7 +25,7 @@ PJS_EXTERN SV *
 PJS_JSString2SV(JSString *str);
 
 PJS_EXTERN JSBool
-PJS_ConvertPerlToJSType(JSContext *, JSObject *, SV *, jsval *);
+PJS_ReflectPerl2JS(JSContext *, JSObject *, SV *, jsval *);
 
 PJS_EXTERN const char *
 PJS_PASSPORT_PROP;

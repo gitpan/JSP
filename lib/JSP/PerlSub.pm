@@ -38,7 +38,7 @@ become a C<PerlSub> instance.
 When you send a subroutine from perl to javascript, you'll get an instance of
 C<PerlSub>. C<PerlSub>s behave pretty much like native javascript Functions.
 
-Like Function instances, instances of PerlSub are invoked with a parentized
+Like Function instances, instances of PerlSub are invoked with a parenthesized
 list of arguments.
 
     var foo = perl_rand();  // invoke perl_rand, foo now random number
@@ -48,9 +48,9 @@ list of arguments.
 And as with any other object, you can manipulate properties and call methods of
 instances of PerlSub.
 
-   perl_rand.attr = 'This is a function imported from perl';
-   add.toString();          // Please try this ;-)
-   add.toSource();	    // Or this!
+    perl_rand.attr = 'This is a function imported from perl';
+    add.toString();          // Please try this ;-)
+    add.toSource();	    // Or this!
 
 =head2 Instance methods
 
@@ -127,7 +127,7 @@ CODE references indistinguishable from anonymous subs.
 =head1 Calling semantics
 
 When you invoke a C<PerlSub> from javascript, in most cases JSP does the
-right thing. But there are diferences in the way than javascript and perl
+right thing. But there are differences in the way than javascript and perl
 behave respect to function calling that you should be aware of. Mainly when you
 export to javascript arbitrary perl functions or expose perl namespaces to
 javascript.
@@ -137,8 +137,8 @@ Read this section for the gory details.
 =head2 Perl contexts
 
 In perl you call a subroutine in either scalar or list context. Perl determines
-this context automatically using the form of the expresion in which the
-function is called. And perl lets your subruotine know which context is being
+this context automatically using the form of the expression in which the
+function is called. And perl lets your subroutine know which context is being
 used (via L<perlfunc/wantarray>). Some subroutines behave differently
 depending on which context they where called. In javascript this concept
 doesn't exists.
@@ -150,7 +150,7 @@ functions always return a single value.
 To solve the first problem, the context in which the perl subroutine call will
 be made is taken from the C<$wantarray> property of the instances of
 C<PerlSub>. C<$wantarray> defaults to C<true>, which is the correct value to
-use in the vast mayority of the cases. We explain why and when to use a
+use in the vast majority of the cases. We explain why and when to use a
 C<false> value below.
 
 For the return value of a C<PerlSub> call you will get either a single value or
@@ -158,8 +158,8 @@ a C<PerlArray>.   You'll get a single value when C<$wantarray> is C<false> or
 when the list returned has a single element, otherwise you'll get a
 C<PerlArray>.
 
-You'll never receive arrays with a single element in them.  This behaiviour may
-be unfortunate but it makes the rest of the cases much more simplier. Besides,
+You'll never receive arrays with a single element in them.  This behaviour may
+be unfortunate but it makes the rest of the cases much more simpler. Besides,
 you can check trivially for that condition as follows:
 
     res = perl_sub_that_returns_a_list();
@@ -203,7 +203,7 @@ semantics.
 
 In every other case, JSP's engine assumes that you are creating or extending
 regular JavaScript objects with C<PerlSub>-based methods and you need a way to
-get the value of C<this> in a I<transparent> way. Thats the pourpouse of the
+get the value of C<this> in a I<transparent> way. Thats the purpose of the
 magical variable L<JSP/$This>.
 
 Perl code not aware of being called from JavaScript will see its arguments

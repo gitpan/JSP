@@ -23,7 +23,7 @@ as instances of JSP::Boolean.  Both perl objects use the C<overload>
 mechanism to behave as expected.
 
 As in javascript the rules to convert other values to boolean values are
-similar to perl's ones, you seldom need to think about them. But, althought is
+similar to perl's ones, you seldom need to think about them. But, although is
 considered bad style, you can found javascript code that uses something like the
 following:
 

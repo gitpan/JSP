@@ -51,15 +51,15 @@ Arrays in javascript are actually C<Array>-objects. When returned to Perl side,
 they are encapsulated in this class and, by default, tied to make them usable
 as a normal Perl array-references.
 
-   ...
-   my $arr = $ctx->eval(q|['foo', 'bar', 4]|);
-   print $arr->[1];     # 'bar'
-   print scalar @$arr;  # 3
-   print shift @$arr;   # 'foo'
-   print ref $arr;      # 'ARRAY'
+    ...
+    my $arr = $ctx->eval(q|['foo', 'bar', 4]|);
+    print $arr->[1];     # 'bar'
+    print scalar @$arr;  # 3
+    print shift @$arr;   # 'foo'
+    print ref $arr;      # 'ARRAY'
 
-   my $obj = tied @$arr;
-   print ref $obj;      # 'JSP::Array'
+    my $obj = tied @$arr;
+    print ref $obj;      # 'JSP::Array'
 
 =head1 INTERFACE
 
@@ -68,26 +68,26 @@ is wrapped I<by reference> as a instance of JSP::Array.
 
 For transparency, and if the C<AutoTie> context option is TRUE, they will be
 C<tied> to a perl ARRAY and instead of the JSP::Array object, the
-array-reference is returned, so the regular perl ARRAY operations and funtions
+array-reference is returned, so the regular perl ARRAY operations and functions
 will see a normal ARRAY.
 
 All those ARRAYs are I<alive>, that is, they refer to the original javascript
 array, .so if you modify them on one side, you are modifying both sides.
 
-   ...
-   my $arr = $ctx->eval(q{
-       var Arr = ['foo', 'bar', 'baz'];
-       Arr;
-   });
+    ...
+    my $arr = $ctx->eval(q{
+        var Arr = ['foo', 'bar', 'baz'];
+        Arr;
+    });
 
-   $arr->[1] = 'bor';
-   pop @$arr;
+    $arr->[1] = 'bor';
+    pop @$arr;
 
-   print $ctx->eval('Arr[1]');      # 'bor'
-   print $ctx->eval('Arr.length');  # 2
+    print $ctx->eval('Arr[1]');      # 'bor'
+    print $ctx->eval('Arr.length');  # 2
 
-   $ctx->eval(q{  Arr.push('fob') });
-   print $arr->[2];                 # 'fob'
+    $ctx->eval(q{  Arr.push('fob') });
+    print $arr->[2];                 # 'fob'
 
 If you need the underlaying JSP::Array object, it can be obtained using
 Perl's C<tied> operator.

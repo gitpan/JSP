@@ -30,7 +30,7 @@ PJS_call_perl_method(
     if (SvTRUE(ERRSV)) {
 	jsval rval;
 	SV* cp = newSVsv(ERRSV);
-	if(!PJS_ConvertPerlToJSType(cx, NULL, cp, &rval)) 
+	if(!PJS_ReflectPerl2JS(cx, NULL, cp, &rval)) 
 	    croak("Can't convert perl error into JSVAL");
 	JS_SetPendingException(cx, rval);
 	sv_setsv(ERRSV, &PL_sv_undef);            
@@ -81,7 +81,7 @@ perl_call_sv_with_jsvals_rsv(
 	     * argc is faked
 	     */
 	    SV *This;
-	    ok = JSVALToSV(cx, argv[-1], &This, 0);
+	    ok = PJS_ReflectJS2Perl(cx, argv[-1], &This, 0);
 	    if(ok) sv_setsv(save_scalar(PJS_This), sv_2mortal(This));
 	    else goto forget;
 	}
@@ -89,7 +89,7 @@ perl_call_sv_with_jsvals_rsv(
 
         for(arg = 0; arg < argc; arg++) {
             SV *sv;
-            ok = JSVALToSV(cx, argv[arg], &sv, 1);
+            ok = PJS_ReflectJS2Perl(cx, argv[arg], &sv, 1);
             if(!ok) {
 		rcount += arg;
                 goto forget;
@@ -115,7 +115,7 @@ perl_call_sv_with_jsvals_rsv(
         if(ok && SvTRUE(ERRSV)) {
             jsval rval;
             SV* cp = newSVsv(ERRSV);
-            if(!PJS_ConvertPerlToJSType(cx, obj, cp, &rval))
+            if(!PJS_ReflectPerl2JS(cx, obj, cp, &rval))
 		croak("Can't convert perl error into JSVAL");
 	    JS_SetPendingException(cx, rval);
 	    sv_setsv(ERRSV, &PL_sv_undef);
@@ -143,7 +143,7 @@ perl_call_sv_with_jsvals(
     JSBool ok = perl_call_sv_with_jsvals_rsv(cx, obj, code, caller, argc, argv,
                                              rval ? &rsv : NULL, flag);
     
-    if(rval && ok) ok = PJS_ConvertPerlToJSType(cx, obj, rsv, rval);
+    if(rval && ok) ok = PJS_ReflectPerl2JS(cx, obj, rsv, rval);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -172,7 +172,7 @@ call_js_function(
     for(i = 0; i <= arg_count; i++) {
         val = *av_fetch(av, i, 0);
 
-        if (!PJS_ConvertPerlToJSType(cx, gobj, val, &(arg_list[i]))) {
+        if (!PJS_ReflectPerl2JS(cx, gobj, val, &(arg_list[i]))) {
             Safefree(arg_list);
             croak("Can't convert argument number %d to jsval", i);
         }

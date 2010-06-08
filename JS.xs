@@ -14,7 +14,7 @@ PJS_GetScope(
     if(SvROK(sv) && sv_derived_from(sv, PJS_RAW_OBJECT))
 	return INT2PTR(JSObject *, SvIV((SV*)SvRV(sv)));
 
-    if(PJS_ConvertPerlToJSType(cx, NULL, sv, &val) && JSVAL_IS_OBJECT(val))
+    if(PJS_ReflectPerl2JS(cx, NULL, sv, &val) && JSVAL_IS_OBJECT(val))
 	return JSVAL_TO_OBJECT(val);
 
     if(JS_ValueToObject(cx, val, &newobj) && newobj)
@@ -317,7 +317,7 @@ SV*
 get_global(pcx)
     JSP::Context pcx;
     CODE:
-	if(!JSVALToSV(pcx->cx,
+	if(!PJS_ReflectJS2Perl(pcx->cx,
 		      OBJECT_TO_JSVAL(JS_GetGlobalObject(pcx->cx)),
 		      &RETVAL,
 		      0) // Return untied wrapper
@@ -339,7 +339,7 @@ new_object(pcx, parent)
 	cx = PJS_GetJSContext(pcx);
 	parent = PJS_GetScope(cx, ST(1));
 	newobj = JS_NewObject(cx, NULL, NULL, parent);
-	if(!newobj || !JSVALToSV(cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)) {
+	if(!newobj || !PJS_ReflectJS2Perl(cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)) {
 	    PJS_report_exception(pcx);
 	    XSRETURN_UNDEF;
 	}
@@ -369,7 +369,7 @@ jsc_eval(pcx, scope, source, name = "")
 	    ok = JS_ExecuteScript(cx, scope, script, &rval);
 	    JS_DestroyScript(cx, script);
 	}
-	if(!ok || !JSVALToSV(cx, rval, &RETVAL, 1)) {
+	if(!ok || !PJS_ReflectJS2Perl(cx, rval, &RETVAL, 1)) {
 	    PJS_report_exception(pcx);
 	    XSRETURN_UNDEF;
         }
@@ -409,7 +409,7 @@ jsc_call(pcx, scope, function, args)
 	}
 
 	if(!call_js_function(cx, scope, fval, args, &rval) ||
-	   !JSVALToSV(cx, rval, &RETVAL, 1))
+	   !PJS_ReflectJS2Perl(cx, rval, &RETVAL, 1))
 	{
 	    PJS_report_exception(pcx);
 	    XSRETURN_UNDEF;
@@ -442,7 +442,7 @@ jsc_can(pcx, scope, func)
 	    if(JS_GetProperty(cx, scope, fname, &val) &&
 	       (JS_TypeOfValue(cx, val) == JSTYPE_FUNCTION
 		|| JS_ValueToFunction(cx, val) != NULL)) {
-		if(!JSVALToSV(cx, val, &RETVAL, 1))
+		if(!PJS_ReflectJS2Perl(cx, val, &RETVAL, 1))
 		    PJS_report_exception(pcx);
 	    }
 	    else RETVAL = &PL_sv_undef;
@@ -504,7 +504,7 @@ jss_compile(pcx, scope, source, name = "")
 
 	if(!(script = PJS_MakeScript(cx, scope, source, name)) ||
 	   !(newobj = JS_NewScriptObject(cx, script)) ||
-	   !JSVALToSV(cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)
+	   !PJS_ReflectJS2Perl(cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)
 	) {
 	    PJS_report_exception(pcx);
 	    XSRETURN_UNDEF;

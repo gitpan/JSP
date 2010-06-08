@@ -127,7 +127,7 @@ Call the underlaying JavaScript Function as a constructor.
 =item prototype ( )
 
 Returns the C<prototype> of the function as a JSP::Object. Useful if the
-function is a contructor and you need to inspect or modify its C<prototype>
+function is a constructor and you need to inspect or modify its C<prototype>
 property.
 
 =item CODE_REF ( )
@@ -137,7 +137,7 @@ JSP::Function.
 
 The reference is cached, so every time you call CODE_REF, you obtain the
 same reference.  This reference is the same one used for the L<"OVERLOADED
-OPERATIONS"> below, so you seeldom need to call this method.
+OPERATIONS"> below, so you seldom need to call this method.
 
 =back
 

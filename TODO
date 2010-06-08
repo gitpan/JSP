@@ -2,12 +2,11 @@
 TODO
 ====
 
-We plan the following road-map for JSP 1.X, in no particular order:
+We plan the following road-map for JSP 1.x, in no particular order:
 
 - Test building in more platforms.
 - API to move Objects between contexts
 - Extend security model
-- Autoload tweaks and overrides files at "install" time for known modules.
 - Write a small tutorial for javascript users about using CPAN modules.
 - Write more examples
 - Complete separation of "engine" vs "glue" code, to allow a SM based bootstrap

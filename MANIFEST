@@ -26,8 +26,8 @@ PJS_PerlSub.c
 PJS_PerlSub.h
 PJS_PerlScalar.c
 PJS_PerlScalar.h
-PJS_TypeConversion.c
-PJS_TypeConversion.h
+PJS_Reflection.c
+PJS_Reflection.h
 PJS_Types.h
 README
 TODO
@@ -63,6 +63,8 @@ lib/JSP/Script.pm
 lib/JSP/Stash.pm
 lib/JSP/Visitor.pm
 lib/JSP/TrapHandler.pm
+lib/JSP/Tweaks.pod
+lib/JSP/Tweaks/IO/Handle.js
 lib/JSP/Runtime/Stock.pm
 t/00-init.t
 t/01-types-from-js.t
@@ -120,3 +122,4 @@ examples/gtk2.js
 examples/gtk2.pl
 examples/posix-fds.js
 examples/test_more.js
+Migrating_from_JavaScript.txt

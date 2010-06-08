@@ -39,7 +39,7 @@ rop_set_prop(dest, pcx, name, val)
     CODE:
 	cx = PJS_GetJSContext(pcx);
 
-	ok = PJS_ConvertPerlToJSType(cx, NULL, val, &rval);
+	ok = PJS_ReflectPerl2JS(cx, NULL, val, &rval);
 
 	if(ok) {
 	    if(ix & PJS_EL_MODE_FLAG)

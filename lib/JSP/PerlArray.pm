@@ -73,7 +73,7 @@ C<$#array = $fill>. Remember: C<length> is the number of elements while
 C<$#array> is the index to the last one.
 
 When the array is extended the new elements will be C<undefined> (C<undef> in
-Perl).  When the array is truncated, the excess elementes are freed.
+Perl).  When the array is truncated, the excess elements are freed.
 
 Setting C<parray.length = 0;> effectively clears the array.
 
@@ -108,7 +108,7 @@ Returns the bottom element.
 
 =item join(I<joinexp>)
 
-Returns a string with all the array elements, converted to strings if necesary,
+Returns a string with all the array elements, converted to strings if necessary,
 concatenated with C<joinexp>, by default C<','> if none provided.
 
 =item slice( )
@@ -133,7 +133,7 @@ Reverse the array I<in place>. The reversed array is returned
 =item sort( I<sorter> )
 
 This will sort the array I<in place>. In the first form, without an argument,
-the sort will be in lexicografical order.
+the sort will be in lexicographical order.
 
 In the second form, C<sorter> is a function used to perform the comparations of
 the array elements. If supplied, the array elements are sorted according to the
@@ -176,7 +176,7 @@ concatenation.
 
 Returns the first index at which a given C<searchElement> element can be found
 in the array, or -1 if it is not present. The search starts at C<fromIndex>,
-if provided or from the begining if not.
+if provided or from the beginning if not.
 
 =item lastIndexOf(I<searchElement>)
 

@@ -31,9 +31,8 @@ sub __jsvalue {
 sub DESTROY {
     my $self = shift;
 
-    if(ref (${$self}->[0])) {
+    if(ref(${$self}->[0]) && $self->__context) {
 	$self->__content->free_root($self->__context);
-	#$self->__context->jsc_free_root(${$self}->[0]);
     } else { # Was finalized in JS side.
 	undef @$$self;
     }

@@ -73,7 +73,7 @@ What happens next depends on the value of the option L<JSP::Context/RaiseExcepti
 
 =item * 
 
-If TRUE perl generates a fatal but trappable exeption.
+If TRUE perl generates a fatal but trappable exception.
 
 =item *
 
@@ -99,7 +99,7 @@ javascript Object.
 
 =head2 Constructor
 
-In Perl you can create new JSP::Error instances, usefull when you need to
+In Perl you can create new JSP::Error instances, useful when you need to
 throw an exception from a perl function called from JavaScript:
 
     die(JSP::Error->new('something fails'));
@@ -120,7 +120,7 @@ was executed.
 
 =item new($message, $fileName, $lineNumber)
 
-I<If inside perl code that is called from JavaScript>, C<new(...)> will contructs
+I<If inside perl code that is called from JavaScript>, C<new(...)> will constructs
 a new JavaScript C<Error> instance, wrap it in a JSP::Error object and return it.
 
 If called outside, it dies with the error "Not in a javascript context".

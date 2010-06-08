@@ -26,18 +26,18 @@ Instances of C<PerlObject> behave much like any other javascript object.  You
 can get and set its properties and you can call its methods.
 
 You can even extend them adding new properties and methods. You can override
-its methods with new ones writen as javascript functions.
+its methods with new ones written as javascript functions.
 
 They inherit from Object (via its prototype chain). You can use any of the
 functions from C<Object.prototype>.
 
-In fact, the C<PerlObject> wrapper is writen as transparent as posible to avoid
+In fact, the C<PerlObject> wrapper is written as transparent as possible to avoid
 name clashes with the methods and properties of the associated perl object nor
 affect the expected javascript semantics.
 
 Be aware that any changes you made to the instance will not normally be visible
 in perl land. And that's a good thing and expected behavior: If you override
-some method to implement an especific workarraund for something too 'perlish',
+some method to implement an specific workaround for something too 'perlish',
 you are changing your instance for javascript only, perl land will continue
 using the 'perlish' original method.
 
@@ -47,10 +47,11 @@ All properties defined in the associated perl object are available as
 properties in javascript.
 
 When you reference a property of a C<PerlObject> instance it will be obtain
-from the perl side, wrapped or converted acording to is type, see
-L<JSP/"From perl to javascript">. Unless you have override on javascript that property, of course.
+from the perl side, wrapped or converted according to is type, see
+L<JSP/"From perl to javascript">.
+Unless you have override on javascript that property, of course.
 
-The only instance property of especial interest is:
+The only instance property of special interest is:
 
 =over 4
 
@@ -71,6 +72,6 @@ Any instance methods defined in the associated perl object and its inheritance
 C<@ISA> tree.
 
 When you call a method of a C<PerlObject> instance you are referencing a
-property in it, so acordly to the previous section you will obtain a C<PerlSub>
+property in it, accordingly to the previous section you will obtain a C<PerlSub>
 instance. So that C<PerlSub> instance will be called. See
 L<JSP::PerlSub> for the details.
