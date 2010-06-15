@@ -7,24 +7,7 @@ JSP::_boot_(__PACKAGE__);
 
 our %ClassStore = ();
 
-sub _resolve_method {
-    my ($inspect, $croak_on_failure) = @_;
-
-    return undef if !defined $inspect;
-    return $inspect if ref $inspect  eq 'CODE';
-
-    my ($pkg, $method) = $inspect =~ /^(?:(.*)::)?(.*)$/;
-    my $deep = 1;
-    $pkg = caller($deep++) if !defined $pkg || $pkg eq q{};
-    while($pkg && $pkg =~ /^JSP::/) {
-	$pkg = caller($deep++);
-    }
-    croak "Can't resolve ${method}" unless defined $pkg;
-    my $callback = $pkg->can($method);
-    croak "Can't resolve ${pkg}::${method}" if !defined $callback && $croak_on_failure;
-
-    return $callback;
-}
+*_resolve_method = \&JSP::Context::_resolve_method;
 
 sub _extract_methods {
     my ($args, @arg_keys) = @_;

@@ -11,9 +11,20 @@ sub new {
 }
 
 sub exec {
-    my ($self) = @_;
+    my($self, $gobj) = @_;
     
-    jss_execute($self->__context, undef, $self->__content);
+    jss_execute($self->__context, $gobj, $self->__content);
+}
+
+sub _prolog {
+    my($self) = @_;
+    my $pp = jss_prolog($self->__context, $self->__content);
+    return $$pp;
+}
+
+sub _getatom {
+    my($self, $index) = @_;
+    return jss_getatom($self->__context, $self->__content, $index);
 }
 
 $JSP::ClassMap{Script} = __PACKAGE__;
@@ -62,6 +73,14 @@ Compiles a script and returns a C<JSP::Script>
 =item jss_execute ( PJS_Context *pcx, SV *gobj, JSObject *obj)
 
 Executes the script wrapped in obj in the context pcx in the scope of gobj
+
+=item jss_prolog ( JSP::Context pcx, JSP::RawObj, name,  sps)
+
+Returns the prolog bytecode of the script wrapped in obj
+
+=item jss_getatom ( JSP::Context pcx,  JSP::RawOb obj, int index)
+
+Returns the atom at index in script
 
 =back
 

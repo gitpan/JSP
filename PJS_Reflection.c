@@ -445,8 +445,9 @@ PJS_ReflectJS2Perl(
 	}
 	else {    
 	    wrapper = newRV_noinc(box); /* Transfer ownership to wrapper */
-	    /* this reblessing is needed in pre 5.9 */
+#if PERL_VERSION < 9
 	    sv_bless(wrapper, SvSTASH(box)); 
+#endif
 	}
 	*sv = wrapper;
 	return JS_TRUE;

@@ -168,7 +168,11 @@ PJS_unmagic(
     MAGIC** mgp;
 
     assert(SvMAGIC(sv));
+#if PERL_VERSION > 9
     mgp = &(((XPVMG*) SvANY(sv))->xmg_u.xmg_magic);
+#else
+    mgp = &(SvMAGIC(sv));
+#endif
     jsv_mg *jsvis;
     for(mg = *mgp; mg; mg = *mgp) {
 	if(mg->mg_type == PERL_MAGIC_jsvis &&
@@ -209,7 +213,8 @@ void PJS_DestroyContext(PJS_Context *pcx) {
 	    while( (val = hv_iternextsv(hv, &key, &len)) ) {
 		JSObject *shell = (JSObject *)SvIVX(val);
 		SV *ref = (SV *)JS_GetPrivate(cx, shell);
-		PJS_unmagic(pcx, SvRV(ref));
+		if(ref && SvROK(ref)) PJS_unmagic(pcx, SvRV(ref));
+		// TODO: Assert needed?
 	    }
 	}
 	JS_SetErrorReporter(cx, NULL);
@@ -316,7 +321,7 @@ PJS_UnrootJSVis(
 	(void)snprintf(hkey, 32, "%p", (void *)SvRV(ref));
 	if(pcx && SvMAGICAL(SvRV(ref))) PJS_unmagic(pcx, SvRV(ref));
 	if(pcx && pcx->jsvisitors) {
-	    (void)hv_delete(pcx->jsvisitors, hkey, strlen(hkey), 0);
+	    (void)hv_delete(pcx->jsvisitors, hkey, strlen(hkey), G_DISCARD);
 	}
 	sv_free(ref);
     }

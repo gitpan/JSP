@@ -48,7 +48,12 @@ sub eval {
 	my $src = join '', <$source>;
 	$source = $src;
     }
-    $self->jsc_eval(undef, $source, $name);
+    if($] > 5.009) { # Avoid one stack frame
+	@_ = ($self, undef, $source, $name);
+	goto &jsc_eval;
+    } else {
+	$self->jsc_eval(undef, $source, $name);
+    }
 }
 
 sub eval_file {
@@ -102,7 +107,7 @@ sub bind_value {
 }
 
 sub bind_object {
-    croak "The value must be a perl object\n" unless blessed $_[2];
+    croak "The value must be a perl object" unless blessed $_[2];
     goto &bind_value;
 }
 
@@ -165,8 +170,12 @@ sub _resolve_method {
     return $inspect if ref $inspect  eq 'CODE';
 
     my ($pkg, $method) = $inspect =~ /^(?:(.*)::)?(.*)$/;
-    $pkg = caller(1) if !defined $pkg || $pkg eq q{};
-    $pkg = caller(2) if $pkg eq 'JSP::Context';
+    my $deep = 1;
+    $pkg = caller($deep++) if !defined $pkg || $pkg eq q{};
+    while($pkg && $pkg =~ /^JSP::/) {
+	$pkg = caller($deep++);
+    }
+    croak "Can't resolve ${method}" unless defined $pkg;
 
     my $callback = $pkg->can($method);
     croak "Can't resolve ${pkg}::${method}" if !defined $callback && $croak_on_failure;

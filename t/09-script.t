@@ -1,6 +1,6 @@
 #!perl
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 use strict;
 use warnings;
@@ -13,11 +13,17 @@ my $cx1 = $rt1->create_context();
 
 # Compile a script
 my $script = $cx1->compile(q!
-v = Math.random(10);
-v + 1;
+  var v = Math.random(10);
+  v + 1;
 !);
 
 isa_ok($script, "JSP::Script", "Compile returns object");
-for(1..10) {
-    ok($script->exec() > 0, "Ok pass $_");
+#Developer's sanity tests
+my($c, $i) = unpack('Cn', $script->_prolog);
+is($c, 127, "Prolog ok");
+is($script->_getatom($i), 'v', "Declares v");
+
+# Run the script
+for(1 .. 10) {
+    ok($script->exec > 0, "Ok pass $_");
 }

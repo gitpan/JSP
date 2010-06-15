@@ -5,6 +5,7 @@
 #include <jsapi.h>
 #include <jsdbgapi.h>
 #include <jsobj.h>
+#include <jsopcode.h>
 
 #if JS_VERSION < 180
 #define JS_SetCStringsAreUTF8()	    /**/
@@ -24,9 +25,7 @@ int main(int argc, char *argv[]) {
     int HBJ = 0;
     void *handle = dlopen(NULL, RTLD_NOW);
 #ifndef JS_THREADSAFE
-#if JS_VERSION >= 185
     if(dlsym(handle, "js_GetCurrentThread")) tt++;
-#endif
 #else
     tt++;
 #endif
@@ -48,6 +47,8 @@ int main(int argc, char *argv[]) {
 #endif
 	if(HBJ) printf("#define JS_HAS_BRANCH_HANDLER\n");
 	else printf("#undef JS_HAS_BRANCH_HANDLER\n");
+	if(JSOP_LIMIT > 234) printf("#define JS_HAS_JSOP_TRACE\n");
+	else printf("#undef JS_HAS_JSOP_TRACE\n");
 	{ /* Test for bug #533450 */
 	    const char *expr = "'\\xe9';";
 	    jsval v1;

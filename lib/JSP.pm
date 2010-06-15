@@ -8,7 +8,7 @@ use Carp;
 
 our $VERSION;
 BEGIN {
-    $VERSION = '1.00';
+    $VERSION = '1.01';
     our @ISA = qw(DynaLoader);
     DynaLoader::bootstrap('JSP', $VERSION);
 }
@@ -113,7 +113,7 @@ JSP - A bridge between JavaScript and Perl languages
 
 Always thought javascript was for web-applications only? well, think again...
 
-Javascript is an easy, elegant and powerful language, known by zillions of
+JavasSript is an easy, elegant and powerful language, known by zillions of
 developers worldwide. Having been born as the scripting language for client
 side Web it was lacking, until now, the library of functions that any general
 purpose language deserves.
@@ -427,9 +427,10 @@ C<PL_sv_no>.
 Returns C<PL_sv_yes> if we have compiled support for threading. Otherwise
 returns C<PL_sv_no>.
 
-=item jsvisitor
+=item jsvisitor (REFERENCE_TO_SOMETHING)
 
-TBD
+Returns the list of contexts ids in which the perl "thing" referenced by
+I<REFERENCE_TO_SOMETHING> is a jsvisitor. See L<JSP::Context/jsvisitor>.
 
 =item supports ( @features )
 
@@ -448,14 +449,20 @@ L<http://lists.cpan.org/showlist.cgi?name=perl-javascript>.
 You may subscribe to the list by sending an empty e-mail to
 C<perl-javascript-subscribe@perl.org>
 
+You can submit any questions, comments, feature requests, etc.,
+to  Salvador Ortiz <sortiz@cpan.org>
+
 =head1 CREDITS
 
 See L<CREDITS>
 
-=head1 BUGS
+=head1 CAVEATS AND BUGS
 
-This is a pre-release version, please submit any questions, bug reports,
-comments, feature requests, etc., to  Salvador Ortiz <sortiz@cpan.org>
+Although perl 5.8 is supported, it lacks some features and have some bugs, we
+strongly recommends you to use 5.10 or a newer perl.
+
+Please report any bug you found to
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=JSP>
 
 =head1 AUTHORS
 

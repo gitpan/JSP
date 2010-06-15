@@ -158,8 +158,8 @@ static JSBool perlpackage_get(
 
     if(*key == '$') {
 	char *name = form_name(package, key);
-	PJS_DEBUG1("In PCS get for $%s\n", name);
 	SV *sv = get_sv(name, 0);
+	PJS_DEBUG1("In PCS get for $%s\n", name);
 	Safefree(name);
 	if(sv) return PJS_ReflectPerl2JS(cx, obj, sv, vp);
     }
@@ -230,11 +230,13 @@ static JSBool perlpackage_resolve(
 	    // if(sv && SvOK(sv)) PJS_DEBUG1("Scalar %s found\n", name);
 	    Safefree(name);
 	    /* Make property defined, but lets getter do its work */
-	    if(JS_DefineProperty(cx, obj, key, JSVAL_VOID, NULL, NULL, 0)) {
-		*objp = obj;
-		return JS_TRUE;
+	    if(sv) {
+		if(JS_DefineProperty(cx, obj, key, JSVAL_VOID, NULL, NULL, 0)) {
+		    *objp = obj;
+		    return JS_TRUE;
+		}
+		return JS_FALSE;
 	    }
-	    return JS_FALSE;
     }
     if(!sv && PJS_GetFlag(PJS_GET_CONTEXT(cx), "ConstantsValue")) {
 	GV **gvp;
@@ -392,8 +394,9 @@ static JSBool perlobj_set(
     SV *sv = SvRV(ref);
     JSBool ok = TRUE;
     if(SvTYPE(sv) == SVt_PVHV && JSVAL_IS_STRING(id)) {
+	SV *svk;
 	ENTER; SAVETMPS;
-	SV *svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
+	svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
 	sv_2mortal(svk);
 	if(hv_exists_ent((HV *)sv, svk, 0)) {
 	    SV *nsv;

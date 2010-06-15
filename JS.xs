@@ -1,5 +1,8 @@
 #include "JS.h"
 
+#undef SHADOW /* perl.h includes shadow.h, clash with jsatom.h  */
+#include "jsscript.h"
+
 JSObject *
 PJS_GetScope(
     JSContext *cx,
@@ -512,6 +515,45 @@ jss_compile(pcx, scope, source, name = "")
     OUTPUT:
 	RETVAL
 
+SV *
+jss_prolog(pcx, obj)
+    JSP::Context pcx;
+    JSObject *obj;
+    PREINIT:
+	JSContext *cx;
+	JSScript *script;
+	char *prolog;
+    CODE:
+	cx = PJS_GetJSContext(pcx);
+	script = (JSScript *)JS_GetPrivate(cx, obj);
+	prolog = (char *)script->code;
+#ifdef JS_HAS_JSOP_TRACE
+	while(*prolog == (char)JSOP_TRACE)
+	    prolog++;
+#endif
+	RETVAL = sv_setref_pvn(newSV(0), NULL, prolog,
+	    (char *)script->main - prolog);
+    OUTPUT:
+	RETVAL
+
+SV *
+jss_getatom(pcx, obj, index)
+    JSP::Context pcx;
+    JSObject *obj;
+    I16 index;
+    PREINIT:
+	JSContext *cx;
+	JSScript *script;
+    CODE:
+	cx = PJS_GetJSContext(pcx);
+	script = (JSScript *)JS_GetPrivate(cx, obj);
+
+	RETVAL = newSVpv(JS_GetStringBytes(
+			  JS_ValueToString(cx,ATOM_KEY(script->atomMap.vector[index]))
+			), 0);
+    OUTPUT:
+	RETVAL
+	
 MODULE = JSP    PACKAGE = JSP::Controller
 
 jsval

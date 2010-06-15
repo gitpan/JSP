@@ -117,11 +117,15 @@ our @ISA = qw(JSP::Object);
 sub allow_from_js {
     my $self = shift;
     no strict 'refs';
-    ${"$self->{'__PACKAGE__'}::_allow_js_export"} = shift;
+    my $old = ${"$self->{'__PACKAGE__'}::_allow_js_export"};
+    ${"$self->{'__PACKAGE__'}::_allow_js_export"} = shift if @_;
+    return $old;
 }
 
 sub class_bind {
     my $self = shift;
+    no strict 'refs';
+    ${"$self->{'__PACKAGE__'}::__im_a_class"} = 1;
     $self->__context->bind_value(shift, $self);
 }
 
@@ -207,7 +211,8 @@ package JSP::PerlSub;
 
 sub _const_sub { # Method call
     my $code = $_[1];
-    my($package, $file, $line, $hints, $bitmask) = (caller 2)[0,1,2,8,9];
+    my $frame = $] > 5.009 ? 1 : 2;
+    my($package, $file, $line, $hints, $bitmask) = (caller $frame)[0,1,2,8,9];
     # warn sprintf("SBB: $package,$file,$line,'$code', H: %x, BM: %s\n", $hints,$bitmask);
     my $cr = eval join("\n",
 	qq|package $package;BEGIN {\$^H=$hints;\${^WARNING_BITS}="$bitmask";}|,

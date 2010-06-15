@@ -160,6 +160,8 @@ my $sv2;
 	ok($jsobj = tied(@$jsarr), 'Is tied');
     }
     isa_ok($jsobj, "JSP::Array", 'Is a Array'); 
+    bless $jsobj, ref($jsobj) if $] < 5.009; # With 5.8 the previous test pass, but
+					     # oveload missing, need re-bless
     is($jsobj->[1], 'bar', 'Expected');
     $jsobj->[1] = $sentinel;
     undef $jsobj;

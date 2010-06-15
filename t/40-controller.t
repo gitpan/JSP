@@ -123,7 +123,7 @@ $ctx->eval(q| Bar.other = function() { return 'other' }; |) or
 is($ctx->eval(q| Bar.other(); |), 'other', "Other");
 
 # Allow modify it
-ok($bstash->allow_from_js(1), "Allow exports into BarP");
+ok(!$bstash->allow_from_js(1), "Allow exports into BarP");
 is($bstash->{__export__}, 1, "Export state visible");
 
 ok($ctx->eval(q| Bar.$scalar2 = "papa" |), "Can set scalar");

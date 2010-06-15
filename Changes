@@ -1,4 +1,14 @@
-1.0  2010-05-XX
+1.01  2010-06-14
+    * JSP::Stash->allow_from_js now returns the previous state
+    * A pair of tests in t/29-exceptions.t relaxed to cope with 5.13.1
+    * Add couple of low level functions for inspect Script's prolog, needed for
+      JavaScript::Inline
+    * Makefile.PL will try hard to find a SpiderMonkey.
+    * Remove duplicated code
+    * Fix some problems with perl 5.8
+    * Fix Win32 build
+
+1.00  2010-06-07
 
      This is a fork from Claes Jakobsson's JavaScript module.
      Although almost every area was revamped, we try hard to be fully backward
@@ -15,7 +25,6 @@
 	var handler = DBI.connect(...);
 
     - New "questions free" building mechanism.
-      Makefile.pl now depends on ExtUtisl::PkgConfig.
     - Builds against SpiderMonkey 1.7.0 up to (unreleased) 1.8.5 (Gecko 1.9.3).
     - Improved exception handling.
     - Perl can access and manipulate javascript's 'this'.

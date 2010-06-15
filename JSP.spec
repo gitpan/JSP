@@ -1,4 +1,4 @@
-%define pmod_ver 0.99_09
+%define pmod_ver 1.01
 
 Summary: Perl JSP module, a bridge between Spidermonkey javascript engine and perl
 Name: perl-JSP
@@ -55,5 +55,5 @@ fi
 %defattr(-, root, root, 0755)
 
 %changelog
-* Mon May 31 2010 Salvador Ortiz <sog@msg.com.mx> 0.99_08
-- Build for testing
+* Sat Jun 12 2010 Salvador Ortiz <sog@msg.com.mx> 1.01
+- For v1.01

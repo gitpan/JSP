@@ -40,13 +40,13 @@ entering perl land are wrapped as C<JSP::Stash> objects.
 
 =over 4
 
-=item allow_from_js ( BOOLEAN )
+=item allow_from_js ( [ BOOLEAN ] )
 
-    $stash->allow_from_js($bool);
+    my $old = $stash->allow_from_js($bool);
 
 Call this with a TRUE value to allow javascript code to make changes to the
 associated perl namespace. All namespaces are, by default, not modifiable from
-javascript.
+javascript. Returns the previous state of the flag.
 
 For example:
 

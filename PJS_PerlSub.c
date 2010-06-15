@@ -33,14 +33,20 @@ perlsub_call(
     JSObject *This = JSVAL_TO_OBJECT(argv[-1]);
     JSClass *clasp = PJS_GET_CLASS(cx, This);
     SV *caller;
-    JSBool wanta;
+    JSBool wanta, isclass = JS_FALSE;
 
     if(!JS_GetProperty(cx, func, "$wantarray", rval) ||
        !JS_ValueToBoolean(cx, *rval, &wanta))
 	return JS_FALSE;
 
     PJS_DEBUG1("In PSC: obj is %s\n", PJS_GET_CLASS(cx, obj)->name);
-    if(clasp == &perlpackage_class ||
+    if(clasp == &perlpackage_class) {
+       if(!JS_GetProperty(cx, This, "$__im_a_class", rval) ||
+          !JS_ValueToBoolean(cx, *rval, &isclass))
+	    return JS_FALSE;
+    }
+
+    if(isclass ||
        ( clasp == &perlsub_class /* Constructors has a Stash in __proto__ */
          && (func = JS_GetPrototype(cx, This))
          && PJS_GET_CLASS(cx, func) == &perlpackage_class)
