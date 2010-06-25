@@ -25,7 +25,7 @@ perlhash_del(
     if(!JSVAL_IS_STRING(id))
 	return JS_TRUE;
 
-    svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
+    svk = PJS_JSString2SV(aTHX_ JSVAL_TO_STRING(id));
     (void)hv_delete_ent(hv, svk, G_DISCARD, 0);
     sv_free(svk);
     return JS_TRUE;
@@ -51,14 +51,14 @@ perlhash_get(
 	return JS_TRUE;
 
     ENTER; SAVETMPS;
-    svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
+    svk = PJS_JSString2SV(aTHX_ JSVAL_TO_STRING(id));
     sv_2mortal(svk);
     PJS_DEBUG1("HASH get: %s\n", SvPV_nolen(svk));
 
     he = hv_fetch_ent(hv, svk, 0, 0);
     if(SvGMAGICAL(hv)) mg_get(HeVAL(he));
     if(he)
-        ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(HeVAL(he)), vp);
+        ok = PJS_ReflectPerl2JS(aTHX_ cx, obj, sv_mortalcopy(HeVAL(he)), vp);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -82,10 +82,10 @@ perlhash_set(
     if(!JSVAL_IS_STRING(id))
         return JS_TRUE;
 
-    if(!PJS_ReflectJS2Perl(cx, *vp, &sv, 1))
+    if(!PJS_ReflectJS2Perl(aTHX_ cx, *vp, &sv, 1))
 	return JS_FALSE;
 
-    svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
+    svk = PJS_JSString2SV(aTHX_ JSVAL_TO_STRING(id));
 
     if(!hv_store_ent(hv, svk, sv, 0)) {
 	if(SvSMAGICAL(hv)) mg_set(sv);
@@ -159,7 +159,7 @@ static JSBool perlhash_resolve(
 	return JS_TRUE;
 
     key = JSVAL_TO_STRING(id);
-    svk = PJS_JSString2SV(key);
+    svk = PJS_JSString2SV(aTHX_ key);
     he = hv_fetch_ent(hv, svk, 0, 0);
     sv_free(svk);
     if(he) {
@@ -178,18 +178,22 @@ JSClass perlhash_class = {
     JSCLASS_PRIVATE_IS_PERL | JSCLASS_NEW_ENUMERATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub, perlhash_del, perlhash_get, perlhash_set,
     (JSEnumerateOp)perlhash_enumerate, (JSResolveOp)perlhash_resolve,
-    JS_ConvertStub, PJS_UnrootJSVis,
+    JS_ConvertStub, PJS_unrootJSVis,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JSObject *
 PJS_NewPerlHash(
+    pTHX_
     JSContext *cx,
     JSObject *parent,
     SV *href
 ) {
-    dTHX;
-    return PJS_CreateJSVis(cx, JS_NewObject(cx, &perlhash_class, NULL, parent), href);
+    return PJS_CreateJSVis(
+			   aTHX_ cx,
+			   JS_NewObject(cx, &perlhash_class, NULL, parent),
+			   href
+    );
 }
 
 static JSBool
@@ -213,8 +217,8 @@ PerlHash(
     for(arg = 0; arg < argc; arg += 2) {
 	JSString *jstr = JS_ValueToString(cx, argv[arg]);
 	if(!jstr) goto fail;
-	key = PJS_JSString2SV(jstr);
-	if(!PJS_ReflectJS2Perl(cx, argv[arg+1], &sv, 1) ||
+	key = PJS_JSString2SV(aTHX_ jstr);
+	if(!PJS_ReflectJS2Perl(aTHX_ cx, argv[arg+1], &sv, 1) ||
 	   !hv_store_ent(hv, key, sv, 0)) goto fail;
 	sv_free(key);
     }
@@ -222,7 +226,7 @@ PerlHash(
     if(SvTRUEx(get_sv(NAMESPACE"PerlHash::construct_blessed", 0)))
 	sv_bless(ref, gv_stashpv(PerlHashPkg, 0));
 
-    ok = PJS_CreateJSVis(cx, obj, ref) != NULL;
+    ok = PJS_CreateJSVis(aTHX_ cx, obj, ref) != NULL;
     fail:
     sv_free(ref);
     return ok;
@@ -230,12 +234,12 @@ PerlHash(
 
 JSObject *
 PJS_InitPerlHashClass(
+    pTHX_
     JSContext *cx,
     JSObject *global
 ) {
-    dTHX;
     JSObject *proto;
-    JSObject *stash = PJS_GetPackageObject(cx, PerlHashPkg);
+    JSObject *stash = PJS_GetPackageObject(aTHX_ cx, PerlHashPkg);
     proto = JS_InitClass(
         cx, global,
 	stash,
@@ -250,6 +254,6 @@ PJS_InitPerlHashClass(
 	                  OBJECT_TO_JSVAL(proto), NULL, NULL, 0))
 	return NULL;
 
-    return PJS_CreateJSVis(cx, proto,
+    return PJS_CreateJSVis(aTHX_ cx, proto,
 		newRV_inc((SV *)get_hv(NAMESPACE"PerlHash::prototype", 1)));
 }

@@ -46,7 +46,7 @@ sub stacktrace {
 }
 
 sub new {
-    my($mess, $file, $line) = @_;
+    my($proto, $mess, $file, $line) = @_;
     $mess ||= 'something fail';
     my $parms = "'$mess'";
     $parms .= ",'$file'" if $file || $line;
@@ -63,7 +63,7 @@ JSP::Error - Encapsulates errors thrown from javascript
 
 =head1 DESCRIPTION
 
-Javascript runtime errors result in new C<Error> objects being created and thrown.
+JavaScript runtime errors result in new C<Error> objects being created and thrown.
 When not handled in javascript, those objects will arrive to perl space when are
 wrapped as an instance of JSP::Error and stored in C<$@>.
 

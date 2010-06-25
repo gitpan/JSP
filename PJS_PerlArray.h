@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 PJS_EXTERN JSObject *
-PJS_NewPerlArray(JSContext *cx, JSObject *parent, SV *ref);
+PJS_NewPerlArray(pTHX_ JSContext *cx, JSObject *parent, SV *ref);
 	
 /*! @function PJS_InitPerlArrayClass
     @abstract Initiailizes the Perl array class
@@ -19,7 +19,7 @@ PJS_NewPerlArray(JSContext *cx, JSObject *parent, SV *ref);
 	@param global The global object for the context
 */
 PJS_EXTERN JSObject *
-PJS_InitPerlArrayClass(JSContext *cx, JSObject *global);
+PJS_InitPerlArrayClass(pTHX_ JSContext *cx, JSObject *global);
 	
 #ifdef __cplusplus
 }

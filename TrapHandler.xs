@@ -24,6 +24,7 @@ PJS_trap_handler(
     jsval *rval,
     void *closure 
 ) {
+    dTHX;
     JSTrapStatus status = JSTRAP_CONTINUE;
 
     PJS_Runtime *runtime = (PJS_Runtime *)closure;

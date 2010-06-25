@@ -1,14 +1,12 @@
 #include "JS.h"
-
-#undef SHADOW /* perl.h includes shadow.h, clash with jsatom.h  */
-#include "jsscript.h"
+#include "const-c.inc"
 
 JSObject *
 PJS_GetScope(
+    pTHX_
     JSContext *cx,
     SV *sv
 ) {
-    dTHX;
     jsval val;
     JSObject *newobj = NULL;
     if(!SvOK(sv))
@@ -17,7 +15,7 @@ PJS_GetScope(
     if(SvROK(sv) && sv_derived_from(sv, PJS_RAW_OBJECT))
 	return INT2PTR(JSObject *, SvIV((SV*)SvRV(sv)));
 
-    if(PJS_ReflectPerl2JS(cx, NULL, sv, &val) && JSVAL_IS_OBJECT(val))
+    if(PJS_ReflectPerl2JS(aTHX_ cx, NULL, sv, &val) && JSVAL_IS_OBJECT(val))
 	return JSVAL_TO_OBJECT(val);
 
     if(JS_ValueToObject(cx, val, &newobj) && newobj)
@@ -27,8 +25,9 @@ PJS_GetScope(
     return NULL;
 }
 
-static JSScript *
+JSScript *
 PJS_MakeScript(
+    pTHX_
     JSContext *cx,
     JSObject *scope,
     SV *source,
@@ -59,6 +58,7 @@ PJS_MakeScript(
 
 MODULE = JSP     PACKAGE = JSP
 PROTOTYPES: DISABLE
+INCLUDE: const-xs.inc
 
 char *
 js_get_engine_version()
@@ -87,6 +87,30 @@ does_support_e4x(...)
     CODE:
 	PERL_UNUSED_VAR(items); /* -W */
 	RETVAL = JS_HAS_XML_SUPPORT ? &PL_sv_yes : &PL_sv_no;
+    OUTPUT:
+	RETVAL
+
+SV*
+does_support_jit(...)
+    CODE:
+	PERL_UNUSED_VAR(items); /* -W */
+#ifdef	JSOPTION_JIT
+	RETVAL = &PL_sv_yes;
+#else
+	RETVAL = &PL_sv_no;
+#endif
+    OUTPUT:
+	RETVAL
+
+SV*
+does_support_opcb(...)
+    CODE:
+	PERL_UNUSED_VAR(items); /* -W */
+#ifdef JS_HAS_BRANCH_HANDLER
+	RETVAL = &PL_sv_no;
+#else /* Imply OPCB available */
+	RETVAL = &PL_sv_yes;
+#endif
     OUTPUT:
 	RETVAL
 
@@ -147,7 +171,7 @@ JSP::Context
 create(rt)
     JSP::RawRT rt;
     CODE:
-	RETVAL = PJS_CreateContext(rt, ST(0));
+	RETVAL = PJS_CreateContext(aTHX_ rt, ST(0));
     OUTPUT:
 	RETVAL
 
@@ -155,25 +179,25 @@ void
 DESTROY(pcx)
     JSP::Context pcx;
     CODE:
-	PJS_DestroyContext(pcx);
+	PJS_DestroyContext(aTHX_ pcx);
 
 void
 jsc_begin_request(pcx)
     JSP::Context pcx;
     CODE:
-	PJS_BeginRequest(PJS_GetJSContext(pcx));
+	PJS_BeginRequest(PJS_getJScx(pcx));
 
 void
 jsc_end_request(pcx)
     JSP::Context pcx;
     CODE:
-	PJS_EndRequest(PJS_GetJSContext(pcx));
+	PJS_EndRequest(PJS_getJScx(pcx));
 
 const char *
 get_version(pcx)
     JSP::Context pcx;
     CODE:
-	RETVAL = JS_VersionToString(JS_GetVersion(PJS_GetJSContext(pcx)));
+	RETVAL = JS_VersionToString(JS_GetVersion(PJS_getJScx(pcx)));
     OUTPUT:
 	RETVAL
 
@@ -183,7 +207,7 @@ set_version(pcx, version)
     const char *version;
     CODE:
 	RETVAL = JS_VersionToString(JS_SetVersion(
-	    PJS_GetJSContext(pcx), JS_StringToVersion(version)
+	    PJS_getJScx(pcx), JS_StringToVersion(version)
 	));
     OUTPUT:
 	RETVAL
@@ -192,7 +216,7 @@ U32
 jsc_get_options(pcx)
     JSP::Context pcx;
     CODE:
-	RETVAL = JS_GetOptions(PJS_GetJSContext(pcx));
+	RETVAL = JS_GetOptions(PJS_getJScx(pcx));
     OUTPUT:
 	RETVAL
 
@@ -201,7 +225,7 @@ jsc_set_options(pcx, options)
     JSP::Context pcx;
     U32	    options;
     CODE:
-	RETVAL = JS_SetOptions(PJS_GetJSContext(pcx), options);
+	RETVAL = JS_SetOptions(PJS_getJScx(pcx), options);
     OUTPUT:
 	RETVAL
     
@@ -210,27 +234,33 @@ jsc_toggle_options(pcx, options)
     JSP::Context pcx;
     U32         options;
     CODE:
-	JS_ToggleOptions(PJS_GetJSContext(pcx), options);
+	JS_ToggleOptions(PJS_getJScx(pcx), options);
 
 
-#ifdef JS_HAS_BRANCH_HANDLER
 void
 jsc_set_branch_handler(pcx, handler)
     JSP::Context pcx;
     SV *handler;
     CODE:
+#ifdef JS_HAS_BRANCH_HANDLER
 	if (!SvOK(handler)) {
 	    /* Remove handler */
 	    sv_free(pcx->branch_handler);
 	    pcx->branch_handler = NULL;
-	    JS_SetBranchCallback(PJS_GetJSContext(pcx), NULL);
+	    JS_SetBranchCallback(PJS_getJScx(pcx), NULL);
 	}
 	else if (SvROK(handler) && SvTYPE(SvRV(handler)) == SVt_PVCV) {
 	    sv_free(pcx->branch_handler);
 	    pcx->branch_handler = SvREFCNT_inc_simple_NN(handler);
-	    JS_SetBranchCallback(PJS_GetJSContext(pcx), PJS_branch_handler);
-	}
-
+	    JS_SetBranchCallback(PJS_getJScx(pcx), PJS_branch_handler);
+	} 
+	else croak("%s: %s is not a CODE reference",
+	           NAMESPACE"RawRT::jsc_set_branch_handler",
+		   "handler"); 
+#else
+	PERL_UNUSED_VAR(handler);
+	croak("%s: not available in this SpiderMonkey",
+	      NAMESPACE"RatRT::jsc_set_branch_handler");
 #endif
 
 SV *
@@ -266,7 +296,7 @@ jsvisitor(pcx, sv)
 			SV *rjsv = newSV(0);
 			sv_setref_pv(robj, PJS_RAW_OBJECT, (void*)object);
 			sv_setref_iv(rjsv, PJS_RAW_JSVAL, (IV)OBJECT_TO_JSVAL(object));
-			RETVAL = PJS_call_perl_method(jsvis->pcx->cx,
+			RETVAL = PJS_CallPerlMethod(aTHX_ PJS_getJScx(jsvis->pcx),
 			    "__new",
 			    sv_2mortal(newSVpv("JSP::Visitor", 0)),	// package
 			    sv_2mortal(robj),			// content
@@ -299,7 +329,7 @@ jsc_unbind_value(pcx, parent, name)
 	jsval pval,val;
 	JSObject *gobj, *pobj;
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 	gobj = JS_GetGlobalObject(cx);
 
 	if (strlen(parent)) {
@@ -320,12 +350,12 @@ SV*
 get_global(pcx)
     JSP::Context pcx;
     CODE:
-	if(!PJS_ReflectJS2Perl(pcx->cx,
-		      OBJECT_TO_JSVAL(JS_GetGlobalObject(pcx->cx)),
+	if(!PJS_ReflectJS2Perl(aTHX_ PJS_getJScx(pcx),
+		      OBJECT_TO_JSVAL(JS_GetGlobalObject(PJS_getJScx(pcx))),
 		      &RETVAL,
 		      0) // Return untied wrapper
 	) {
-	    PJS_report_exception(pcx);
+	    PJS_report_exception(aTHX_ pcx);
 	    XSRETURN_UNDEF;
 	};
     OUTPUT:
@@ -339,11 +369,11 @@ new_object(pcx, parent)
 	JSContext *cx;
 	JSObject *newobj;
     CODE:
-	cx = PJS_GetJSContext(pcx);
-	parent = PJS_GetScope(cx, ST(1));
+	cx = PJS_getJScx(pcx);
+	parent = PJS_GetScope(aTHX_ cx, ST(1));
 	newobj = JS_NewObject(cx, NULL, NULL, parent);
-	if(!newobj || !PJS_ReflectJS2Perl(cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)) {
-	    PJS_report_exception(pcx);
+	if(!newobj || !PJS_ReflectJS2Perl(aTHX_ cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)) {
+	    PJS_report_exception(aTHX_ pcx);
 	    XSRETURN_UNDEF;
 	}
     OUTPUT:
@@ -361,19 +391,19 @@ jsc_eval(pcx, scope, source, name = "")
 	JSScript *script;
 	JSBool ok = JS_FALSE;
     CODE:
-	cx = PJS_GetJSContext(pcx);
-	scope = PJS_GetScope(cx, ST(1));
+	cx = PJS_getJScx(pcx);
+	scope = PJS_GetScope(aTHX_ cx, ST(1));
 
 	sv_setsv(ERRSV, &PL_sv_undef);
 
-	script = PJS_MakeScript(cx, scope, source, name);
+	script = PJS_MakeScript(aTHX_ cx, scope, source, name);
 
 	if(script != NULL) {
 	    ok = JS_ExecuteScript(cx, scope, script, &rval);
 	    JS_DestroyScript(cx, script);
 	}
-	if(!ok || !PJS_ReflectJS2Perl(cx, rval, &RETVAL, 1)) {
-	    PJS_report_exception(pcx);
+	if(!ok || !PJS_ReflectJS2Perl(aTHX_ cx, rval, &RETVAL, 1)) {
+	    PJS_report_exception(aTHX_ pcx);
 	    XSRETURN_UNDEF;
         }
 	PJS_GC(cx);
@@ -391,8 +421,8 @@ jsc_call(pcx, scope, function, args)
         jsval rval;
         jsval fval;
     CODE:
-        cx = PJS_GetJSContext(pcx);
-	scope = PJS_GetScope(cx, ST(1));
+        cx = PJS_getJScx(pcx);
+	scope = PJS_GetScope(aTHX_ cx, ST(1));
 
 	if(sv_derived_from(function, PJS_FUNCTION_PACKAGE)) {
 	    SV *box = SvRV(function);
@@ -411,10 +441,10 @@ jsc_call(pcx, scope, function, args)
 		croak("Undefined subroutine %s called\n", name);
 	}
 
-	if(!call_js_function(cx, scope, fval, args, &rval) ||
-	   !PJS_ReflectJS2Perl(cx, rval, &RETVAL, 1))
+	if(!PJS_Call_js_function(aTHX_ cx, scope, fval, args, &rval) ||
+	   !PJS_ReflectJS2Perl(aTHX_ cx, rval, &RETVAL, 1))
 	{
-	    PJS_report_exception(pcx);
+	    PJS_report_exception(aTHX_ pcx);
 	    XSRETURN_UNDEF;
         }
 	PJS_GC(cx);
@@ -430,8 +460,8 @@ jsc_can(pcx, scope, func)
 	JSContext *cx;
 	jsval val;
     CODE:
-	cx = PJS_GetJSContext(pcx);
-	scope = PJS_GetScope(cx, ST(1));
+	cx = PJS_getJScx(pcx);
+	scope = PJS_GetScope(aTHX_ cx, ST(1));
 
 	if(sv_derived_from(func, PJS_FUNCTION_PACKAGE) ||
 	   // Completeness and allow check if exported
@@ -445,8 +475,8 @@ jsc_can(pcx, scope, func)
 	    if(JS_GetProperty(cx, scope, fname, &val) &&
 	       (JS_TypeOfValue(cx, val) == JSTYPE_FUNCTION
 		|| JS_ValueToFunction(cx, val) != NULL)) {
-		if(!PJS_ReflectJS2Perl(cx, val, &RETVAL, 1))
-		    PJS_report_exception(pcx);
+		if(!PJS_ReflectJS2Perl(aTHX_ cx, val, &RETVAL, 1))
+		    PJS_report_exception(aTHX_ pcx);
 	    }
 	    else RETVAL = &PL_sv_undef;
 	    JS_RestoreExceptionState(cx, es);
@@ -459,7 +489,7 @@ jsc_get_flag(pcx, flag)
     JSP::Context pcx;
     const char *flag;
     CODE:
-	RETVAL = (int)PJS_GetFlag(pcx, flag);
+	RETVAL = (int)PJS_getFlag(pcx, flag);
     OUTPUT:
 	RETVAL
 
@@ -469,91 +499,8 @@ jsc_set_flag(pcx, flag, val)
     const char *flag;
     int val;
     CODE:
-	PJS_SetFlag(pcx, flag, val);
+	PJS_setFlag(pcx, flag, val);
 
-MODULE = JSP     PACKAGE = JSP::Script
-
-jsval
-jss_execute(pcx, scope, obj)
-    JSP::Context pcx;
-    JSObject *scope = NO_INIT;
-    JSObject* obj;
-    PREINIT:
-	JSContext *cx;
-    CODE:
-	cx = PJS_GetJSContext(pcx);
-	scope = PJS_GetScope(cx, ST(1));
-
-	if(!JS_ExecuteScript(cx, scope, (JSScript *)JS_GetPrivate(cx, obj), &RETVAL)) {
-	    PJS_report_exception(pcx);
-	    XSRETURN_UNDEF;
-	}
-    OUTPUT:
-	RETVAL
-
-SV *
-jss_compile(pcx, scope, source, name = "")
-    JSP::Context pcx;
-    JSObject *scope = NO_INIT;
-    SV *source;
-    const char *name;
-    PREINIT:
-	JSContext *cx;
-        JSScript *script;
-	JSObject *newobj;
-    CODE:
-	cx = PJS_GetJSContext(pcx);
-	scope = PJS_GetScope(cx, ST(1));
-
-	if(!(script = PJS_MakeScript(cx, scope, source, name)) ||
-	   !(newobj = JS_NewScriptObject(cx, script)) ||
-	   !PJS_ReflectJS2Perl(cx, OBJECT_TO_JSVAL(newobj), &RETVAL, 0)
-	) {
-	    PJS_report_exception(pcx);
-	    XSRETURN_UNDEF;
-	}
-    OUTPUT:
-	RETVAL
-
-SV *
-jss_prolog(pcx, obj)
-    JSP::Context pcx;
-    JSObject *obj;
-    PREINIT:
-	JSContext *cx;
-	JSScript *script;
-	char *prolog;
-    CODE:
-	cx = PJS_GetJSContext(pcx);
-	script = (JSScript *)JS_GetPrivate(cx, obj);
-	prolog = (char *)script->code;
-#ifdef JS_HAS_JSOP_TRACE
-	while(*prolog == (char)JSOP_TRACE)
-	    prolog++;
-#endif
-	RETVAL = sv_setref_pvn(newSV(0), NULL, prolog,
-	    (char *)script->main - prolog);
-    OUTPUT:
-	RETVAL
-
-SV *
-jss_getatom(pcx, obj, index)
-    JSP::Context pcx;
-    JSObject *obj;
-    I16 index;
-    PREINIT:
-	JSContext *cx;
-	JSScript *script;
-    CODE:
-	cx = PJS_GetJSContext(pcx);
-	script = (JSScript *)JS_GetPrivate(cx, obj);
-
-	RETVAL = newSVpv(JS_GetStringBytes(
-			  JS_ValueToString(cx,ATOM_KEY(script->atomMap.vector[index]))
-			), 0);
-    OUTPUT:
-	RETVAL
-	
 MODULE = JSP    PACKAGE = JSP::Controller
 
 jsval
@@ -563,8 +510,8 @@ _get_stash(pcx, package)
     PREINIT:
 	JSContext *cx;
     CODE:
-	cx = PJS_GetJSContext(pcx);
-	RETVAL = OBJECT_TO_JSVAL(PJS_GetPackageObject(cx, package));
+	cx = PJS_getJScx(pcx);
+	RETVAL = OBJECT_TO_JSVAL(PJS_GetPackageObject(aTHX_ cx, package));
     OUTPUT:
 	RETVAL
 
@@ -579,6 +526,10 @@ False()
 	sv_setref_iv(RETVAL, PJS_BOOLEAN, (IV)ix);
     OUTPUT:
 	RETVAL
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wnonnull"
+#endif
 
 BOOT:
     PJS_Context_SV = gv_fetchpv("JSP::Context::CURRENT", GV_ADDMULTI, SVt_IV);

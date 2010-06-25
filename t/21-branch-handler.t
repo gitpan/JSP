@@ -1,15 +1,20 @@
 #!perl
-
 use Test::More;
+use Test::Exception;
 
 use strict;
 use warnings;
 
 use JSP;
-if(defined &JSP::Context::jsc_set_branch_handler) {
+my $cx1 = JSP::Runtime->new->create_context();
+if(!JSP::does_support_opcb) {
     plan tests => 3;
 } else {
-    plan skip_all => "No support for branch_handler in this SpiderMonkey";
+    plan tests => 1;
+    throws_ok {
+	$cx1->set_branch_handler(\&branch_handler);
+    } qr/not available/, 'Not available';
+    exit(0);
 }
 
 my $called = 0;
@@ -18,8 +23,6 @@ sub branch_handler {
     return 1;
 }
 
-my $rt1 = JSP::Runtime->new();
-my $cx1 = $rt1->create_context();
 
 $cx1->eval("for(i = 0; i < 10; i++) {}");
 is($called, 0);

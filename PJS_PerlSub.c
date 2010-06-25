@@ -8,7 +8,7 @@ static JSBool perlsub_construct(JSContext *, JSObject *, uintN, jsval *, jsval *
 static JSClass perlsub_class = {
     "PerlSub", JSCLASS_PRIVATE_IS_PERL,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PJS_UnrootJSVis,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PJS_unrootJSVis,
     NULL,
     NULL,
     perlsub_call,
@@ -51,7 +51,7 @@ perlsub_call(
          && (func = JS_GetPrototype(cx, This))
          && PJS_GET_CLASS(cx, func) == &perlpackage_class)
     ) { // Caller is a stash, make a static call
-	const char *pkgname = PJS_GetPackageName(cx, This);
+	const char *pkgname = PJS_GetPackageName(aTHX_ cx, This);
 	if(!pkgname) return JS_FALSE;
 	caller = newSVpv(pkgname, 0);
 	PJS_DEBUG1("Caller is a stash: %s\n", pkgname);
@@ -67,8 +67,8 @@ perlsub_call(
 	PJS_DEBUG1("Caller is %s\n", clasp->name);
     }
 
-    return perl_call_sv_with_jsvals(cx, obj, callee, caller, argc, argv,
-                                    rval, wanta ? G_ARRAY : G_SCALAR);
+    return PJS_Call_sv_with_jsvals(aTHX_ cx, obj, callee, caller, argc, argv,
+                                   rval, wanta ? G_ARRAY : G_SCALAR);
 }
 
 static JSBool
@@ -94,16 +94,16 @@ perlsub_construct(
          && strEQ(PJS_GET_CLASS(cx, proto)->name, PJS_PACKAGE_CLASS_NAME))
     ) {
 	SV *rsv = NULL;
-	char *pkgname = PJS_GetPackageName(cx, proto);
+	char *pkgname = PJS_GetPackageName(aTHX_ cx, proto);
 	caller = newSVpv(pkgname, 0);
 
 	argv[-1] = OBJECT_TO_JSVAL(This);
-	if(!perl_call_sv_with_jsvals_rsv(cx, obj, callee, caller,
+	if(!PJS_Call_sv_with_jsvals_rsv(aTHX_ cx, obj, callee, caller,
 	                                argc, argv, &rsv, G_SCALAR))
 	    return JS_FALSE;
 
 	if(SvROK(rsv) && sv_derived_from(rsv, pkgname)) {
-	    JSObject *newobj = PJS_NewPerlObject(cx, JS_GetParent(cx, func), rsv);
+	    JSObject *newobj = PJS_NewPerlObject(aTHX_ cx, JS_GetParent(cx, func), rsv);
 	    *rval = OBJECT_TO_JSVAL(newobj);
 	    return JS_TRUE;
 	}
@@ -122,7 +122,7 @@ perlsub_as_constructor(
     jsval id,
     jsval *vp
 ) {
-    dTHX;
+    // dTHX;
     const char *key;
 
     if(!JSVAL_IS_STRING(id))
@@ -154,13 +154,13 @@ perlsub_as_constructor(
 
 JSObject*
 PJS_NewPerlSub(
+    pTHX_
     JSContext *cx,
     JSObject *parent,
     SV *cvref
 ) {
-    dTHX;
     JSObject *newobj = PJS_CreateJSVis(
-	    cx,
+	    aTHX_ cx,
 	    JS_NewObject(cx, &perlsub_class, NULL, parent),
 	    cvref
     );
@@ -174,7 +174,7 @@ PJS_NewPerlSub(
 		                      NULL, NULL,
 		                      JSPROP_READONLY | JSPROP_PERMANENT)
 	) {
-	    PJS_UnrootJSVis(cx, newobj);
+	    PJS_unrootJSVis(cx, newobj);
 	    newobj = NULL;
 	}
     }
@@ -200,35 +200,35 @@ PerlSub(
     JS_SetPrivate(cx, obj, (void *)newRV(&PL_sv_undef));
     ENTER; SAVETMPS;
     if(JS_ConvertArguments(cx, argc, argv, "s", &tmp) &&
-       (cvref = PJS_call_perl_method(cx,
+       (cvref = PJS_CallPerlMethod(aTHX_ cx,
                                      "_const_sub",
 	                             sv_2mortal(newSVpv(PerlSubPkg, 0)),
 	                             sv_2mortal(newSVpv(tmp,0)),
 	                             NULL)))
-	ok = PJS_CreateJSVis(cx, obj, cvref) != NULL;
+	ok = PJS_CreateJSVis(aTHX_ cx, obj, cvref) != NULL;
     FREETMPS; LEAVE;
     return ok;
 }
 
 JSObject*
 PJS_InitPerlSubClass(
+    pTHX_
     JSContext *cx,
     JSObject *global
 ) {
-    dTHX;
     CV *pcv = get_cv(NAMESPACE"PerlSub::prototype", 0);
     JSObject *proto;
     if(pcv && (CvROOT(pcv) || CvXSUB(pcv))) {
 	proto = JS_InitClass(
 	    cx,
 	    global,
-	    PJS_GetPackageObject(cx, PerlSubPkg),
+	    PJS_GetPackageObject(aTHX_ cx, PerlSubPkg),
 	    &perlsub_class,
 	    PerlSub, 1, 
 	    NULL, NULL,
 	    NULL, NULL
 	);
-	return PJS_CreateJSVis(cx, proto,
+	return PJS_CreateJSVis(aTHX_ cx, proto,
 	                       sv_2mortal(newRV_inc((SV *)pcv)));
     }
     croak("Can't locate PerlSub::prototype");

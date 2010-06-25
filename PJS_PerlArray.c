@@ -30,7 +30,7 @@ perlarray_get(
         v = av_fetch(av, ix, 0);
         if(v) {
 	    if(SvGMAGICAL(*v)) mg_get(*v);
-            ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(*v), vp);
+            ok = PJS_ReflectPerl2JS(aTHX_ cx, obj, sv_mortalcopy(*v), vp);
         }
         else {
             JS_ReportError(cx, "Failed to retrieve element at index: %d", ix);
@@ -58,7 +58,7 @@ perlarray_set(
     if(JSVAL_IS_INT(id)) {
         IV ix = JSVAL_TO_INT(id);
         SV *sv;
-        if(!PJS_ReflectJS2Perl(cx, *vp, &sv, 1)) {
+        if(!PJS_ReflectJS2Perl(aTHX_ cx, *vp, &sv, 1)) {
             JS_ReportError(cx, "Failed to convert argument to Perl");
             return JS_FALSE;
         }
@@ -153,18 +153,22 @@ JSClass perlarray_class = {
     JSCLASS_PRIVATE_IS_PERL | JSCLASS_NEW_ENUMERATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub, JS_PropertyStub, perlarray_get, perlarray_set,
     (JSEnumerateOp)perlarray_enumerate, (JSResolveOp)perlarray_resolve,
-    JS_ConvertStub, PJS_UnrootJSVis,
+    JS_ConvertStub, PJS_unrootJSVis,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JSObject *
 PJS_NewPerlArray(
+    pTHX_
     JSContext *cx,
     JSObject *parent,
     SV *ref
 ) {
-    dTHX;
-    return PJS_CreateJSVis(cx, JS_NewObject(cx, &perlarray_class, NULL, parent), ref);
+    return PJS_CreateJSVis(
+	    aTHX_ cx, 
+	    JS_NewObject(cx, &perlarray_class, NULL, parent),
+	    ref
+    );
 }
 
 
@@ -185,7 +189,7 @@ perlarray_push(
 
     for(tmp = 0; tmp < argc; tmp++) {
 	SV *sv;
-	if(!PJS_ReflectJS2Perl(cx, argv[tmp], &sv, 1)) {
+	if(!PJS_ReflectJS2Perl(aTHX_ cx, argv[tmp], &sv, 1)) {
 	    JS_ReportError(cx, "Failed to convert argument %d to Perl", tmp);
 	    return JS_FALSE;
 	}
@@ -214,7 +218,7 @@ perlarray_unshift(
         av_unshift(av, argc);
         for(tmp = 0; tmp < argc; tmp++) {
             SV *sv;
-            if(!PJS_ReflectJS2Perl(cx, argv[tmp], &sv, 1)) {
+            if(!PJS_ReflectJS2Perl(aTHX_ cx, argv[tmp], &sv, 1)) {
                 JS_ReportError(cx, "Failed to convert argument %d to Perl", tmp);
                 return JS_FALSE;
             }
@@ -251,7 +255,7 @@ perlarray_shift(
         return JS_TRUE;
     }
     ENTER; SAVETMPS;
-    ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(sv), rval);
+    ok = PJS_ReflectPerl2JS(aTHX_ cx, obj, sv_mortalcopy(sv), rval);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -279,7 +283,7 @@ perlarray_pop(
         return JS_TRUE;
     }
     ENTER; SAVETMPS;
-    ok = PJS_ReflectPerl2JS(cx, obj, sv_mortalcopy(sv), rval);
+    ok = PJS_ReflectPerl2JS(aTHX_ cx, obj, sv_mortalcopy(sv), rval);
     FREETMPS; LEAVE;
     return ok;
 }
@@ -359,14 +363,14 @@ PerlArray(
 
     av_extend(av, argc);
     for(arg = 0; arg < argc; arg++) {
-	if(!PJS_ReflectJS2Perl(cx, argv[arg], &sv, 1) ||
+	if(!PJS_ReflectJS2Perl(aTHX_ cx, argv[arg], &sv, 1) ||
 	   !av_store(av, arg, sv)) goto fail;
     }
 
     if(SvTRUE(get_sv(NAMESPACE"PerlArray::construct_blessed", 0)))
 	sv_bless(ref, gv_stashpv(PerlArrayPkg,0));
 
-    ok = PJS_CreateJSVis(cx, obj, ref) != NULL;
+    ok = PJS_CreateJSVis(aTHX_ cx, obj, ref) != NULL;
     fail:
     sv_free(ref);
     return ok;
@@ -374,12 +378,12 @@ PerlArray(
 
 JSObject *
 PJS_InitPerlArrayClass(
+    pTHX_
     JSContext *cx,
     JSObject *global
 ) {
-    dTHX;
     JSObject *proto;
-    JSObject *stash = PJS_GetPackageObject(cx, PerlArrayPkg);
+    JSObject *stash = PJS_GetPackageObject(aTHX_ cx, PerlArrayPkg);
     proto = JS_InitClass(
         cx,
 	global,
@@ -394,6 +398,6 @@ PJS_InitPerlArrayClass(
 	                  OBJECT_TO_JSVAL(proto), NULL, NULL, 0))
 	return NULL;
 
-    return PJS_CreateJSVis(cx, proto,
+    return PJS_CreateJSVis(aTHX_ cx, proto,
 		newRV_inc((SV *)get_av(NAMESPACE"PerlArray::prototype",1)));
 }

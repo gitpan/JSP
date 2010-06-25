@@ -4,8 +4,6 @@
 #include <dlfcn.h>
 #include <jsapi.h>
 #include <jsdbgapi.h>
-#include <jsobj.h>
-#include <jsopcode.h>
 
 #if JS_VERSION < 180
 #define JS_SetCStringsAreUTF8()	    /**/
@@ -29,8 +27,9 @@ int main(int argc, char *argv[]) {
 #else
     tt++;
 #endif
-#if JS_VERSION < 185
-    if(dlsym(handle, "JS_SetBranchCallback")) HBJ++;
+#if JS_VERSION < 180 || defined(JS_MAX_OPERATION_LIMIT)
+    /* Don't use interim Operation Callback */
+    HBJ++;
 #endif
     JS_SetCStringsAreUTF8();
     rt = JS_NewRuntime(8L * 1024 * 1024);
@@ -38,7 +37,11 @@ int main(int argc, char *argv[]) {
     if(cx) {
 	JSClass *jsclass;
 	JSObject *gobj;
+#if JS_VERSION < 185
 	gobj = JS_NewObject(cx, &global_class, NULL, NULL);
+#else
+	gobj = JS_NewGlobalObject(cx, &global_class);
+#endif
 	if(!gobj || !JS_InitStandardClasses(cx, gobj)) 
 	    goto fail;
 	printf("#define JS_VERSION\t%d\n", JS_VERSION);
@@ -47,8 +50,6 @@ int main(int argc, char *argv[]) {
 #endif
 	if(HBJ) printf("#define JS_HAS_BRANCH_HANDLER\n");
 	else printf("#undef JS_HAS_BRANCH_HANDLER\n");
-	if(JSOP_LIMIT > 234) printf("#define JS_HAS_JSOP_TRACE\n");
-	else printf("#undef JS_HAS_JSOP_TRACE\n");
 	{ /* Test for bug #533450 */
 	    const char *expr = "'\\xe9';";
 	    jsval v1;

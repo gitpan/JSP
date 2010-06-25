@@ -10,13 +10,20 @@
 #define __JAVASCRIPT_H__
 
 #include "JS_Env.h"
+#ifndef WIN32
+#define PERL_NO_GET_CONTEXT
+#endif
 #include <EXTERN.h>
 #include <perl.h>
 #include <XSUB.h>
 
+#if defined(__cplusplus) && defined(__GNUC__)
+#undef dNOOP
+#define dNOOP	extern int __attribute__ ((unused)) Perl___notused
+#endif
+
 #include <jsapi.h>
 #include <jsdbgapi.h>
-#include <jsobj.h>
 
 #ifndef JS_ARGV_CALLEE
 #define JS_ARGV_CALLEE(argv)	    ((argv)[-2])
@@ -30,16 +37,12 @@
 #define PJS_EndRequest(cx)	    /**/
 #endif
 
-#ifdef STOBJ_GET_CLASS
-#define	PJS_GET_CLASS(cx,obj)	    STOBJ_GET_CLASS(obj)
-#else
 #define	PJS_GET_CLASS(cx,obj)	    JS_GET_CLASS(cx,obj)
-#endif
 
 #if PJS_UTF8_NATIVE
 #define PJS_SvPV(sv, len)	    SvPVutf8(sv, len)
 #else
-#define	PJS_SvPV(sv, len)	    (!JS_CStringsAreUTF8() ? PJS_ConvertUC(sv, &len) : SvPVutf8(sv, len))
+#define	PJS_SvPV(sv, len)	    (!JS_CStringsAreUTF8() ? PJS_ConvertUC(aTHX_ sv, &len) : SvPVutf8(sv, len))
 #endif
 
 #if JS_VERSION == 185
@@ -52,8 +55,7 @@
 #define PJS_GC(cx)		    JS_GC(cx)
 #endif
 
-
-#ifdef DEBUG
+#if defined(PJSDEBUG)
 #define	PJS_DEBUG(x)		    warn(x)
 #define	PJS_DEBUG1(x,x1)	    warn(x,x1)
 #define	PJS_DEBUG2(x,x1,x2)	    warn(x,x1,x2)

@@ -164,8 +164,8 @@ sub TIEHASH { $_[1] }
 sub DESTROY {} # This hasn't a passport
 sub VALID { ${$_[0]}->[1] && ${$_[0]}->[1]->_isjsvis(${$_[0]}->[6]); }
 
-package #Hide from PAUSE
-    JSP::Any;
+package 
+    JSP::Any; #Hide from PAUSE
 
 require Scalar::Util;
 sub toSource {
@@ -197,7 +197,8 @@ sub toSource {
     $val;
 }
 
-package JSP::PerlScalar;
+package
+    JSP::PerlScalar; # Hide from PAUSE
 
 my $scalar;
 our $prototype = \$scalar;
@@ -207,7 +208,8 @@ sub toString {
     "${$this}";
 }
 
-package JSP::PerlSub;
+package
+    JSP::PerlSub; # Hide from PAUSE
 
 sub _const_sub { # Method call
     my $code = $_[1];
@@ -249,7 +251,8 @@ sub apply {
     $code->( $this, @{$_[0]} );
 }
 
-package JSP::PerlArray;
+package
+    JSP::PerlArray; # Hide from PAUSE
 # Some of the following methods are contrived for legacy support,
 # will be simplified in 2.1
 sub toString {
@@ -303,7 +306,8 @@ sub DESTROY {} # Don't autoload
 *indexOf = \&indexOf;
 *slice = \&slice;
 
-package JSP::PerlHash;
+package
+    JSP::PerlHash; # Hide from PAUSE
 our %prototype=();
 
 sub toSource {

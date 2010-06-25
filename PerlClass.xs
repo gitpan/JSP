@@ -45,9 +45,9 @@ struct PJS_Class {
 
 static PJS_Class *
 get_class_by_name(
+    pTHX_
     const char *name
 ) {
-    dTHX;
     HV	*cstore = get_hv(NAMESPACE"PerlClass::ClassStore", 0);
     SV  **svp;
 
@@ -66,18 +66,6 @@ struct PJS_Property {
 
     struct PJS_Property *_next;
 };
-
-static void 
-free_property(
-    PJS_Property *pfunc
-) {
-    if(!pfunc) return;
-
-    sv_free(pfunc->getter);
-    sv_free(pfunc->setter);
-
-    Safefree(pfunc);
-}
 
 static void 
 free_JSPropertySpec(
@@ -120,6 +108,7 @@ invoke_perl_property_getter(
     jsval id,
     jsval *vp
 ) {
+    dTHX;
     PJS_Class *pcls;
     PJS_Property *pprop;
     SV *caller;
@@ -147,7 +136,7 @@ invoke_perl_property_getter(
         invocation_mode = 0;
     }
     
-    if ((pcls = get_class_by_name(name)) == NULL) {
+    if ((pcls = get_class_by_name(aTHX_ name)) == NULL) {
         JS_ReportError(cx, "Can't find class '%s'", name);
         return JS_FALSE;
     }
@@ -172,8 +161,8 @@ invoke_perl_property_getter(
         caller = newSVpv(pcls->pkg, 0);
     }
 
-    if (!perl_call_sv_with_jsvals(cx, obj, pprop->getter, caller,
-	                          0, NULL, vp, G_SCALAR)) {
+    if (!PJS_Call_sv_with_jsvals(aTHX_ cx, obj, pprop->getter, caller,
+	                         0, NULL, vp, G_SCALAR)) {
         return JS_FALSE;
     }
 
@@ -187,6 +176,7 @@ invoke_perl_property_setter(
     jsval id,
     jsval *vp
 ) {
+    dTHX;
     PJS_Class *pcls;
     PJS_Property *pprop;
     SV *caller;
@@ -213,7 +203,7 @@ invoke_perl_property_setter(
         invocation_mode = 0;
     }
     
-    if ((pcls = get_class_by_name(name)) == NULL) {
+    if ((pcls = get_class_by_name(aTHX_ name)) == NULL) {
         JS_ReportError(cx, "Can't find class '%s'", name);
         return JS_FALSE;
     }
@@ -236,8 +226,8 @@ invoke_perl_property_setter(
     }
     else caller = newSVpv(pcls->pkg, 0);
 
-    if (!perl_call_sv_with_jsvals(cx, obj, pprop->setter, caller,
-                                  1, vp, NULL, G_SCALAR | G_NOARGS))
+    if (!PJS_Call_sv_with_jsvals(aTHX_ cx, obj, pprop->setter, caller,
+                                 1, vp, NULL, G_SCALAR | G_NOARGS))
         return JS_FALSE;
 
     return JS_TRUE;
@@ -288,21 +278,6 @@ free_JSFunctionSpec(
     Safefree(fs_list);
 }
 
-static void 
-free_PJS_Function(
-    PJS_Function *function
-) {
-    dTHX;
-    if(function->callback && SvTRUE(function->callback))
-        SvREFCNT_dec(function->callback);
-    
-    if(function->name)
-        Safefree(function->name);
-
-    if(function)
-        Safefree(function);
-}
-
 /* Universal call back for constructors */
 static JSBool
 construct_perl_object(
@@ -312,6 +287,7 @@ construct_perl_object(
     jsval *argv,
     jsval *rval
 ) {
+    dTHX;
     PJS_Class *pcls;
     JSFunction *jfunc = JS_ValueToFunction(cx, JS_ARGV_CALLEE(argv));
     char *name;
@@ -321,7 +297,7 @@ construct_perl_object(
 
     name = (char *)JS_GetFunctionName(jfunc);
     
-    if ((pcls = get_class_by_name(name)) == NULL) {
+    if ((pcls = get_class_by_name(aTHX_ name)) == NULL) {
         JS_ReportError(cx, "Can't find class %s", name);
         return JS_FALSE;
     }
@@ -333,12 +309,12 @@ construct_perl_object(
         return JS_FALSE;
     }
 
-    if (!perl_call_sv_with_jsvals_rsv(cx, obj, pcls->cons,
-				      newSVpv(pcls->pkg, 0),
-				      argc, argv, &rsv, G_SCALAR))
+    if (!PJS_Call_sv_with_jsvals_rsv(aTHX_ cx, obj, pcls->cons,
+				     newSVpv(pcls->pkg, 0),
+				     argc, argv, &rsv, G_SCALAR))
 	return JS_FALSE; /* We must have thrown an exception */
 
-    if (sv_isobject(rsv)) return PJS_CreateJSVis(cx, obj, rsv) != NULL;
+    if (sv_isobject(rsv)) return PJS_CreateJSVis(aTHX_ cx, obj, rsv) != NULL;
 
     JS_ReportError(cx, "%s's constructor don't return an object",
 		   pcls->clasp->name);
@@ -347,6 +323,7 @@ construct_perl_object(
 
 static JSPropertySpec *
 add_class_properties(
+    pTHX_
     PJS_Class *pcls,
     HV *ps,
     U8 flags
@@ -427,6 +404,7 @@ invoke_perl_object_method(
     jsval *argv,
     jsval *rval
 ) {
+    dTHX;
     PJS_Class *pcls;
     PJS_Function *pfunc;
     JSFunction *jfunc = PJS_FUNC_SELF;
@@ -451,7 +429,7 @@ invoke_perl_object_method(
         invocation_mode = 0;
     }
 
-    if (!(pcls = get_class_by_name(name))) {
+    if (!(pcls = get_class_by_name(aTHX_ name))) {
         JS_ReportError(cx, "Can't find class '%s'", name);
         return JS_FALSE;
     }
@@ -471,12 +449,13 @@ invoke_perl_object_method(
         caller = newSVpv(pcls->pkg,0);
     }
 
-    return perl_call_sv_with_jsvals(cx, obj, pfunc->callback,
-                                    caller, argc, argv, rval, G_SCALAR);
+    return PJS_Call_sv_with_jsvals(aTHX_ cx, obj, pfunc->callback,
+                                   caller, argc, argv, rval, G_SCALAR);
 }
 
 static JSFunctionSpec *
 add_class_functions(
+    pTHX_
     PJS_Class *pcls,
     HV *fs,
     U8 flags
@@ -549,6 +528,7 @@ add_class_functions(
 
 static void 
 free_class(
+    pTHX_
     PJS_Class *pcls
 ) {
     PJS_Function *method;
@@ -561,7 +541,10 @@ free_class(
     method = pcls->methods;
     while(method != NULL) {
         PJS_Function *next = method->_next;
-        free_PJS_Function(method);
+	if(method->callback && SvTRUE(method->callback))
+	    SvREFCNT_dec(method->callback);
+	if(method->name)
+	    Safefree(method->name);
         method = next;
     }
     free_JSFunctionSpec(pcls->fs);
@@ -570,7 +553,9 @@ free_class(
     property = pcls->properties;
     while (property != NULL) {
         PJS_Property *next = property->_next;
-        free_property(property);
+	sv_free(property->getter);
+	sv_free(property->setter);
+	Safefree(property);
         property = next;
     }
     free_JSPropertySpec(pcls->ps);
@@ -587,6 +572,7 @@ free_class(
 
 static SV* 
 store_class(
+    pTHX_
     PJS_Class *pcls
 ) {
     /* Add class to list of classes in context */
@@ -610,6 +596,7 @@ create_class(
     HV *static_ps,
     U32 flags
 ) {
+    dTHX;
     PJS_Class *pcls;
 
     Newxz(pcls, 1, PJS_Class);
@@ -621,19 +608,19 @@ create_class(
 
     /* Add "package" */
     if(!(pcls->pkg = savepv(pkg))) {
-        free_class(pcls);
+        free_class(aTHX_ pcls);
         croak("Failed to allocate memory for pkg");
     }
 
     /* Create JSClass "clasp" */
     Newxz(pcls->clasp, 1, JSClass);
     if (pcls->clasp == NULL) {
-        free_class(pcls);
+        free_class(aTHX_ pcls);
         croak("Failed to allocate memory for JSClass");
     }
 
     if(!(pcls->clasp->name = savepv(name))) {
-        free_class(pcls);
+        free_class(aTHX_ pcls);
         croak("Failed to allocate memory for name in JSClass");
     }
 
@@ -645,34 +632,35 @@ create_class(
     pcls->clasp->enumerate = JS_EnumerateStub;
     pcls->clasp->resolve = JS_ResolveStub;
     pcls->clasp->convert = JS_ConvertStub;
-    pcls->clasp->finalize = PJS_UnrootJSVis;
+    pcls->clasp->finalize = PJS_unrootJSVis;
 
     /* Per-object functions and properties */
-    pcls->fs = add_class_functions(pcls, fs, PJS_INSTANCE_METHOD);
-    pcls->ps = add_class_properties(pcls, ps, PJS_INSTANCE_METHOD);
+    pcls->fs = add_class_functions(aTHX_ pcls, fs, PJS_INSTANCE_METHOD);
+    pcls->ps = add_class_properties(aTHX_ pcls, ps, PJS_INSTANCE_METHOD);
     
     /* Class functions and properties */
-    pcls->static_fs = add_class_functions(pcls, static_fs, PJS_CLASS_METHOD);
-    pcls->static_ps = add_class_properties(pcls, static_ps, PJS_CLASS_METHOD);
+    pcls->static_fs = add_class_functions(aTHX_ pcls, static_fs, PJS_CLASS_METHOD);
+    pcls->static_ps = add_class_properties(aTHX_ pcls, static_ps, PJS_CLASS_METHOD);
     /* refcount constructor */
     pcls->cons = newRV_inc((SV *)cons);
 
-    return store_class(pcls);
+    return store_class(aTHX_ pcls);
 }
 
 static JSObject *
 bind_class(
-    PJS_Context *pcx, 
+    pTHX_
+    JSContext *cx, 
     JSObject *gobj,
     PJS_Class *pcls
 ) {
     JSObject *proto;
-    JSObject *stash = PJS_GetPackageObject(PJS_GetJSContext(pcx), pcls->pkg);
+    JSObject *stash = PJS_GetPackageObject(aTHX_ cx, pcls->pkg);
 
     if(!stash) croak("Can't register namespace %s\n", pcls->pkg);
     
     /* Initialize class */
-    proto = JS_InitClass(PJS_GetJSContext(pcx),
+    proto = JS_InitClass(cx,
 			 gobj,
 			 stash,
 			 pcls->clasp,
@@ -684,13 +672,13 @@ bind_class(
 			 pcls->static_fs /* static_fs */
     );
 
-    JS_DefineProperty(pcx->cx, stash, PJS_PROXY_PROP,
+    JS_DefineProperty(cx, stash, PJS_PROXY_PROP,
 	              OBJECT_TO_JSVAL(proto), NULL, NULL, 0);
 
     // Will wait Claes decision
-    // JS_SetReservedSlot(PJS_GetJSContext(pcx), stash, 0, PRIVATE_TO_JSVAL(pcsv));
+    // JS_SetReservedSlot(cx, stash, 0, PRIVATE_TO_JSVAL(pcsv));
 
-    if(!PJS_CreateJSVis(PJS_GetJSContext(pcx), proto,
+    if(!PJS_CreateJSVis(aTHX_ cx, proto,
 		    sv_2mortal(sv_bless(newRV(newSV(0)), gv_stashpv(pcls->pkg,0))))
     ) {
 	croak("Failed to initialize class in context");
@@ -721,13 +709,13 @@ bind(pcls, pcx, gobj)
     JSP::Context pcx;
     JSObject *scope = NO_INIT;
     CODE:
-	scope = PJS_GetScope(pcx->cx, ST(2));
-	if(!bind_class(pcx, scope, pcls))
-	    PJS_report_exception(pcx);
+	scope = PJS_GetScope(aTHX_ PJS_getJScx(pcx), ST(2));
+	if(!bind_class(aTHX_ PJS_getJScx(pcx), scope, pcls))
+	    PJS_report_exception(aTHX_ pcx);
 
 void
 DESTROY(pcls)
     JSP::PerlClass pcls;
     CODE:
 	PJS_DEBUG1("In free_class %s\n", pcls->clasp->name);
-	free_class(pcls);
+	free_class(aTHX_ pcls);

@@ -1,12 +1,6 @@
-package JSP::PerlScalar;
-# Documentation only
-1;
-
-__END__
-
 =head1 NAME
 
-JSP::PerlScalar - Encapsulate Perl SCALAR references in javascript
+PerlScalar - Encapsulate Perl SCALAR references in JavaScript
 
 =head1 DESCRIPTION
 
@@ -18,7 +12,7 @@ scalars.
 =head1 JAVASCRIPT INTERFACE
 
 Any I<unblessed> SCALAR reference that you pass from perl to javascrip will be
-wrapped as an instance of C<PerlScalar>, Blessed ones will be normally a C<PerlObject>.
+wrapped as an instance of C<PerlScalar>, Blessed ones will be normally a L<PerlObject>.
 
 =head2 Contructor
 
@@ -51,3 +45,5 @@ Retrive the value from the reference, the returned value will be a javascript pr
 Returns the perl stringification for the reference. (Subject to change soon).
 
 =back
+
+=cut

@@ -13,13 +13,13 @@ extern "C" {
 #define PJS_PACKAGE_CLASS_NAME   "Stash"
 
 PJS_EXTERN JSObject *
-PJS_NewPerlObject(JSContext *cx, JSObject *parent, SV *ref);
+PJS_NewPerlObject(pTHX_ JSContext *cx, JSObject *parent, SV *ref);
     	
 PJS_EXTERN JSObject *
-PJS_GetPackageObject(JSContext *cx, const char *package);
+PJS_GetPackageObject(pTHX_ JSContext *cx, const char *package);
 
 PJS_EXTERN char *
-PJS_GetPackageName(JSContext *cx, JSObject *package);
+PJS_GetPackageName(pTHX_ JSContext *cx, JSObject *package);
 	
 #ifdef __cplusplus
 }

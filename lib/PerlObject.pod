@@ -1,12 +1,6 @@
-package JSP::PerlObject;
-# Documentation only
-1;
-
-__END__
-
 =head1 NAME
 
-JSP::PerlObject - Encapsulates generic perl objects in javascript
+PerlObject - Encapsulates generic perl objects in JavaScript space
 
 =head1 DESCRIPTION
 
@@ -74,4 +68,6 @@ C<@ISA> tree.
 When you call a method of a C<PerlObject> instance you are referencing a
 property in it, accordingly to the previous section you will obtain a C<PerlSub>
 instance. So that C<PerlSub> instance will be called. See
-L<JSP::PerlSub> for the details.
+L<PerlSub> for the details.
+
+=cut

@@ -23,9 +23,11 @@ my %Flags = (
     'Restricted' => 1,
     'ConstantsValue' => 1,
     'StrictEnable' => 0,
-    'JITEnable' => 0,
+    'VOFixEnable' => 0,
     'XMLEnable' => 1,
 );
+
+$Flags{JITEnable} = 0 if JSP->does_support_jit;
 
 sub new {
     my ($pkg, $runtime) = @_;
@@ -185,6 +187,7 @@ sub _resolve_method {
 
 sub set_branch_handler {
     my ($self, $handler) = @_;
+    croak "'set_branch_handler' not available" if(JSP::does_support_opcb);
     $handler = _resolve_method($handler, 1);
     $self->jsc_set_branch_handler($handler);
 }
@@ -208,10 +211,12 @@ sub compile_file {
 
 {
     my %options_by_tag = (
-        strict  => 1,
-        xml     => 1 << 6,
-        jit     => 1 << 11,
+        strict  => scalar JSP::_constant('JSOPTION_STRICT'),
+        vofix   => scalar JSP::_constant('JSOPTION_VAROBJFIX'), 
+        xml     => scalar JSP::_constant('JSOPTION_XML'),
     );
+    $options_by_tag{jit} = scalar JSP::_constant('JSOPTION_JIT')
+	if JSP->does_support_jit;
 
     sub get_options {
         my ($self) = @_;
@@ -241,7 +246,6 @@ sub compile_file {
     
         1;
     }
-
 
     sub TIEHASH { $_[1] }
 
@@ -419,7 +423,11 @@ context isn't restricted, otherwise dies with the error "Not enough privileges";
 
 =item set_branch_handler ( $handler )
 
-Attaches an branch callback handler (a function that is called when a branch is
+[ B<DEPRECATED>. The support API was removed from SpiderMonkey v1.8+, calling
+C<set_branch_handler> in that case will thrown a fatal error.
+See L<JSP::Context::Timeout> for a supported way to control a runaway script. ]
+
+Attaches a branch callback handler (a function that is called when a branch is
 performed) to the context. The argument I<$handler> may be a code-reference or
 the name of a subroutine.
 
@@ -617,8 +625,7 @@ Removes a new named property in I<parent>.
 
 =item jsc_set_branch_handler ( PJS_Context *context, SV *handler )
 
-Attaches a branch handler to the context. No check is made to see if I<handler>
-is a valid SVt_PVCV.
+Attaches a branch handler to the context.
 
 =item jsc_begin_request
 

@@ -10,7 +10,7 @@ use JSP;
 my $runtime = new JSP::Runtime();
 my $context = $runtime->create_context();
 
-my $ret = $context->eval(q| <xml>this is an E4X object</xml> |);
+my $ret = $context->eval(q|var x=<xml>this is an E4X object</xml>; x |);
 
 isa_ok($ret, 'JSP::XMLObject');
 is($ret->toXMLString, '<xml>this is an E4X object</xml>', "Methods works");

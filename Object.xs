@@ -10,7 +10,7 @@ get_class_name(object, pcx)
     JSP::Context pcx;
     JSP::RawObj object;
     CODE:
-	RETVAL = PJS_GET_CLASS(PJS_GetJSContext(pcx), object)->name;
+	RETVAL = PJS_GET_CLASS(PJS_getJScx(pcx), object)->name;
     OUTPUT:
 	RETVAL
 
@@ -20,7 +20,7 @@ rop_seal_object(object, pcx, deep = 0)
     JSP::RawObj	object;
     U32	    deep;
     CODE:
-	JS_SealObject(PJS_GetJSContext(pcx), object, (JSBool)deep);
+	JS_SealObject(PJS_getJScx(pcx), object, (JSBool)deep);
 
 #define PJS_EL_MODE_FLAG	2
 
@@ -37,9 +37,9 @@ rop_set_prop(dest, pcx, name, val)
 	jsval rval;
 	JSContext *cx;
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 
-	ok = PJS_ReflectPerl2JS(cx, NULL, val, &rval);
+	ok = PJS_ReflectPerl2JS(aTHX_ cx, NULL, val, &rval);
 
 	if(ok) {
 	    if(ix & PJS_EL_MODE_FLAG)
@@ -52,7 +52,7 @@ rop_set_prop(dest, pcx, name, val)
 	    }
         }
 
-	if(!ok && PJS_report_exception(pcx))
+	if(!ok && PJS_report_exception(aTHX_ pcx))
 	    XSRETURN_UNDEF;
 	RETVAL = 1;
     OUTPUT:
@@ -69,7 +69,7 @@ rop_get_prop(source, pcx, property)
 	JSBool ok = JS_FALSE;
 	JSContext *cx;
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 
 	if(ix & PJS_EL_MODE_FLAG)
 	    ok = JS_GetElement(cx, source, SvIV(property), &RETVAL);
@@ -91,7 +91,7 @@ rop_get_prop(source, pcx, property)
 		                           &RETVAL);
 	    }
 	}
-	if(!ok && PJS_report_exception(pcx))
+	if(!ok && PJS_report_exception(aTHX_ pcx))
 	    XSRETURN_UNDEF;
     OUTPUT:
 	RETVAL
@@ -107,7 +107,7 @@ rop_delete_prop(dest, pcx, name)
 	JSContext *cx;
 	JSBool ok;
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 
 	if(ix & PJS_EL_MODE_FLAG)
 	    ok = JS_DeleteElement(cx, dest, SvIV(name));
@@ -119,7 +119,7 @@ rop_delete_prop(dest, pcx, name)
 		ok = JS_DeleteProperty2(cx, dest, str, &tmp);
 	    else ok = JS_DeleteUCProperty2(cx, dest, (jschar *)str, -(int)len, &tmp);
 	}
-	if(!ok && PJS_report_exception(pcx))
+	if(!ok && PJS_report_exception(aTHX_ pcx))
 	    XSRETURN_UNDEF;
 	RETVAL = 1;
     OUTPUT:
@@ -136,7 +136,7 @@ rop_firstkey(object, pcx)
 	JSContext *cx;
 	char hkey[32];
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 
 	RETVAL = JS_NewPropertyIterator(cx, object);
 
@@ -155,7 +155,7 @@ rop_nextkey(iterator, pcx)
 	JSContext *cx;
 	jsid idp;
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 
 	if(!JS_NextProperty(cx, iterator, &idp))
 	    croak("NextProperty fail!");
@@ -180,7 +180,7 @@ rop_length(source, pcx)
 	JSContext *cx;
 	jsuint len;
     CODE:
-	cx = PJS_GetJSContext(pcx);
+	cx = PJS_getJScx(pcx);
 	RETVAL = JS_HasArrayLength(cx, source, &len) ? newSViv(len) : &PL_sv_undef;
     OUTPUT:
 	RETVAL
@@ -197,7 +197,7 @@ rop_tie(thing, pcx, isarr)
 	AV *avbox;
 	SV **last;
     CODE:
-	box = PJS_GetPassport(pcx->cx, thing);
+	box = PJS_GetPassport(aTHX_ PJS_getJScx(pcx), thing);
 	avbox = (AV *)SvRV(box);
 	last = av_fetch(avbox, 5+isarr, 1);
 	if(last && SvOK(*last) && SvROK(*last)) {
@@ -225,7 +225,7 @@ rop_free_root(thing, pcx)
 	SV *box;
     CODE:
 	snprintf(hkey, 32, "%p", (void *)thing);
-	box = PJS_GetPassport(pcx->cx, thing);
+	box = PJS_GetPassport(aTHX_ PJS_getJScx(pcx), thing);
 	PJS_DEBUG2("Freing %s brc: %d\n", hkey, (int)SvREFCNT(box));
 	/* Invalidate CODEREF cache, its maybe holding a reference */
 	av_store((AV *)SvRV(box), 7, &PL_sv_undef);
@@ -234,5 +234,5 @@ rop_free_root(thing, pcx)
 	 * references in perl land to the Boxed.
 	 */
 	if(!PL_dirty) SvREFCNT_inc_simple_NN(box); 
-	JS_DeleteProperty(pcx->cx, pcx->pvisitors, hkey);
-	PJS_GC(pcx->cx);
+	JS_DeleteProperty(PJS_getJScx(pcx), pcx->pvisitors, hkey);
+	PJS_GC(PJS_getJScx(pcx));

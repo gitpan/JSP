@@ -8,7 +8,7 @@ use Carp;
 
 our $VERSION;
 BEGIN {
-    $VERSION = '1.01';
+    $VERSION = '1.02';
     our @ISA = qw(DynaLoader);
     DynaLoader::bootstrap('JSP', $VERSION);
 }
@@ -111,46 +111,46 @@ JSP - A bridge between JavaScript and Perl languages
 
 =head1 INTRODUCTION
 
-Always thought javascript was for web-applications only? well, think again...
+Always thought JavaScript was for web-applications only? well, think again...
 
-JavasSript is an easy, elegant and powerful language, known by zillions of
+JavaScript is an easy, elegant and powerful language, known by zillions of
 developers worldwide. Having been born as the scripting language for client
 side Web it was lacking, until now, the library of functions that any general
 purpose language deserves.
 
-Have you enjoyed the functional and prototype based nature of javascript and
-have you dreamed of using javascript to access you favorite database or to
+Have you enjoyed the functional and prototype based nature of JavaScript and
+have you dreamed of using JavaScript to access you favorite database or to
 drive your favorite widget toolkit? Then this module is for you.
 
 In your mod_perl framework, have you ever wanted to allow your users to write
-content handlers in javascript? Then this module is for you.
+content handlers in JavaScript? Then this module is for you.
 
-This modules gives you the power to extend javascript adding every
-functionality that your application needs, the power to embed javascript in
-your Perl applications, even the power to make full-blown javascript
+This modules gives you the power to extend JavaScript adding every
+functionality that your application needs, the power to embed JavaScript in
+your Perl applications, even the power to make full-blown JavaScript
 applications having CPAN's resourcefulness at your fingertips.
 
-With this module you'll be able to use from javascript any subroutine or class
-written in Perl. And likewise, have available in Perl any javascript function
+With this module you'll be able to use from JavaScript any subroutine or class
+written in Perl. And likewise, have available in Perl any JavaScript function
 object, etc...
 
 Variables and values such as primitive types, objects and functions are
 automagically reflected between both environments. All your perl HASHes, ARRAYs
-and objects can be used from javascript and all your javascript classes and
+and objects can be used from JavaScript and all your JavaScript classes and
 objects can be used from Perl.
 
 You will be able to even define hybrid classes. Some of the methods defined in
-Perl and others defined in javascript.
+Perl and others defined in JavaScript.
 
-This module is not a javascript compiler/interpreter but a bridge between
+This module is not a JavaScript compiler/interpreter but a bridge between
 Mozilla's SpiderMonkey and Perl engines.
 
-If you are a javascript developer anxious to make full-blown javascript
-applications see the included L<jsp> javascript shell.
+If you are a JavaScript developer anxious to make full-blown JavaScript
+applications see the included L<jsp> JavaScript shell.
 
 =head1 DESCRIPTION
 
-For use javascript from perl with this module, you normally follow three simple
+For use JavaScript from Perl with this module, you normally follow three simple
 steps:
 
 =over 4
@@ -175,14 +175,14 @@ object associated to the context for more complex cases.
 =item *
 
 B<Compile and/or evaluate javascript code> with C<eval>'s family of methods
-and L<JSP::Context/call>, that obtain references to javascript values and
-call javascript functions.  L<JSP::Context> provides many more methods for
+and L<JSP::Context/call>, that obtain references to JavaScript values and
+call JavaScript functions.  L<JSP::Context> provides many more methods for
 doing that.
 
 =back
 
-Javascript code can re-enter the perl interpreter, for example by calling a
-function defined in perl. The flow of your program will be switching between
+JavaScript code can re-enter the Perl interpreter, for example by calling a
+function defined in Perl. The flow of your program will be switching between
 both interpreters freely.
 
 Values returned by calls to functions and methods of the other interpreter will
@@ -195,7 +195,7 @@ to handle them.
 
 =head2 From javascript to perl
 
-In javascript there are two types, B<primitives> and B<objects>. Among the
+In JavaScript there are two types, B<primitives> and B<objects>. Among the
 primitives, there are B<integers>, B<numbers>, B<strings>, and B<booleans>. All
 numeric and strings primitives are converted I<by value> to simple scalar
 values.
@@ -203,7 +203,7 @@ values.
 The boolean primitives are wrapped in instances of L<JSP::Boolean>, to
 warrant round trip integrity.
 
-The special javascript value C<undefined>, is converted to perl's C<undef>.
+The special JavaScript value C<undefined>, is converted to perl's C<undef>.
 
 All objects will be wrapped to instances of L<JSP::Object> or one of its
 specialized subclasses: L<JSP::Array>, L<JSP::Function>,
@@ -213,8 +213,8 @@ See L</%ClassMap> for a way to declare new wrappers when need arise.
 
 =head2 From perl to javascript
 
-All simple (non-references) perl scalar values are converted to javascript
-B<primitives>.  All references will be wrapped in javascript objects, unblessed
+All simple (non-references) perl scalar values are converted to JavaScript
+B<primitives>.  All references will be wrapped in JavaScript objects, unblessed
 HASH references to instances of C<PerlHash>, unblessed ARRAY references to
 instances of C<PerlArray>, unblessed SCALAR references to instances of
 C<PerlScalar>,  CODE references to instances of C<PerlSub>.
@@ -222,15 +222,14 @@ C<PerlScalar>,  CODE references to instances of C<PerlSub>.
 C<PerlSub> instances work just like C<Function> instances (javascript
 functions), so they may be called.
 
-See L<JSP::PerlArray>, L<JSP::PerlHash>,
-L<JSP::PerlScalar> and L<JSP::PerlSub> for details.
+See L<PerlArray>, L<PerlHash>, L<PerlScalar> and L<PerlSub> for details.
 
 All blessed references (perl objects) will be wrapped I<by default> as instances
 of C<PerlObject>, but you can make arrangements to use a different wrapper for
 specific perl classes. See L<PerlObject> and L<JSP::Context/bind_class>
 for details.
 
-Perl's C<undef> is converted to javascript's C<undefined> value.
+Perl's C<undef> is converted to JavasSript's C<undefined> value.
 
 =head2 Round trip integrity
 
@@ -238,7 +237,7 @@ When a value from one interpreter enters the other it will be converted/wrapped 
 described above. If it gets sent back to its original interpreter JSP engine
 warrants you will see its original form.
 
-For example, if you send a HASH reference to javascript and then you send it
+For example, if you send a HASH reference to JavaScript and then you send it
 back again to perl you'll see exactly the same HASH.
 
     my $h = { foo=>1, bar=>'hi' };
@@ -270,25 +269,25 @@ same object:
 
 =head1 EXCEPTION HANDLING
 
-In javascript a lot of operations can fail in many different ways. Even a
-single assignment can fail (remember that in javascript every variable is a
+In JavaScript a lot of operations can fail in many different ways. Even a
+single assignment can fail (remember that in JavaScript every variable is a
 "property" of something and there may be a getter involved which can throw an
 exception).
 
-When you are running javascript code, all I<untrapped> exceptions will be
+When you are running JavaScript code, all I<untrapped> exceptions will be
 raised on the caller perl side using C<croak>, normally fatal. But you can
-trap them with perl's C<eval>, effectively converting javascript's exceptions
+trap them with perl's C<eval>, effectively converting JavaScript's exceptions
 into perl exceptions.
 
 Is such cases, in C<$@> you will get a L<JSP::Error> instance.
 
-And when from javascript land you reenter perl, and for any reason your perl
+And when from JavaScript land you reenter perl, and for any reason your perl
 code dies outside an C<eval>, JSP will convert the error, in C<$@>, into a
-javascript exception an throw it.
+JavaScript exception an throw it.
 
-So, if a fatal error occurs in perl code called from javascript it can be trapped
+So, if a fatal error occurs in perl code called from JavaScript it can be trapped
 using a C<try ... catch>. If you need to raise an exception from perl you can
-just use C<die($error_to_raise)>, if the error isn't handled in javascript, it
+just use C<die($error_to_raise)>, if the error isn't handled in JavaScript, it
 will be propagated and can be trapped in perl by a C<eval { ...  }> block.
 
 This way exceptions can be handled in a regular manner in both environments.
@@ -309,11 +308,11 @@ JSP in fact was born as a fork from Claes's JavaScript perl module.
 
 =item C<JavaScript::SpiderMonkey> by Mike Schill and Thomas Busch
 
-Mainly if you want to run some javascript inside perl.
+Mainly if you want to run some JavaScript inside perl.
 
 =item C<JavaScript::V8> by Pawel Murias
 
-Based in the V8 javascript engine.
+Based in the V8 JavaScript engine.
 
 =back
 
@@ -325,7 +324,7 @@ Based in the V8 javascript engine.
 
 =item stock_context( )
 
-Executing javascript code requires a B<context>, that's an instance of a
+Executing JavaScript code requires a B<context>, that's an instance of a
 L<JSP::Context>. One easy way to obtain one is by calling
 C<stock_context>.
 
@@ -394,7 +393,7 @@ So users of you wrapper should do:
 The value of javascript's C<this> when in perl code. C<$This> will be C<undef>
 unless your code was called from javascript.
 
-See L<JSP::PerlSub> for details.
+See L<PerlSub> for details.
 
 =back
 
@@ -427,15 +426,25 @@ C<PL_sv_no>.
 Returns C<PL_sv_yes> if we have compiled support for threading. Otherwise
 returns C<PL_sv_no>.
 
-=item jsvisitor (REFERENCE_TO_SOMETHING)
+=item does_support_jit
 
-Returns the list of contexts ids in which the perl "thing" referenced by
-I<REFERENCE_TO_SOMETHING> is a jsvisitor. See L<JSP::Context/jsvisitor>.
+Returns C<PL_sv_yes> if we have compiled support for the SM JIT. Otherwise
+returns C<PL_sv_no>.
+
+=item does_support_opcb
+
+Returns C<PL_sv_yes> if we have compiled support for I<OperationCallbacks> in SM.
+Otherwise returns C<PL_sv_no>
 
 =item supports ( @features )
 
 Checks if all features given in I<@features> are present. Is case insensitive. Supported keys are 
-B<e4x>, B<utf8> and B<threading.
+B<e4x>, B<utf8> and B<threading>.
+
+=item jsvisitor (REFERENCE_TO_SOMETHING)
+
+Returns the list of contexts ids in which the perl "thing" referenced by
+I<REFERENCE_TO_SOMETHING> is a jsvisitor. See L<JSP::Context/jsvisitor>.
 
 =back
 

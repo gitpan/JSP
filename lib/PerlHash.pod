@@ -1,13 +1,6 @@
-package JSP::PerlHash;
-
-# Documentation Only
-
-1;
-__END__
-
 =head1 NAME
 
-JSP::PerlHash - Encapsulate a perl hash in javascript space
+PerlHash - Encapsulate a perl HASH in JavaScript space
 
 Perl HASH references are seen in javascript as C<PerlHash> instances. 
 
@@ -118,11 +111,11 @@ object (C<PerlHash.prototype>) to make changes to all C<PerlHash> instances.
 
 =item $construct_blessed
 
-When you set the variable I<$construct_blessed> to a TRUE value, you are
+When you set the variable I<$JSP::PerlHash::construct_blessed> to a TRUE value, you are
 turning on the Claes's JavaScript compatibility mode. This affects the behavior
 of the javascript C<PerlHash> constructor.
 
-This feature can be removed at any time. I strongly recommend to do not use it.
+This feature can be removed at any time. I strongly recommend against using it.
 Read "Migrating from JavaScript.txt" for the details.
 
 =back

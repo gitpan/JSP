@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 PJS_EXTERN JSObject *
-PJS_NewPerlHash(JSContext *cx, JSObject *parent, SV *ref);
+PJS_NewPerlHash(pTHX_ JSContext *cx, JSObject *parent, SV *ref);
 	
 /*! @function PJS_InitPerlHashClass
     @abstract Initiailizes the Perl hash class
@@ -19,7 +19,7 @@ PJS_NewPerlHash(JSContext *cx, JSObject *parent, SV *ref);
 	@param global The global object for the context
 */
 PJS_EXTERN JSObject *
-PJS_InitPerlHashClass(JSContext *cx, JSObject *global);
+PJS_InitPerlHashClass(pTHX_ JSContext *cx, JSObject *global);
 	
 #ifdef __cplusplus
 }

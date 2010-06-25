@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 PJS_EXTERN JSObject *
-PJS_NewPerlScalar(JSContext *cx, JSObject *parent, SV *ref);
+PJS_NewPerlScalar(pTHX_ JSContext *cx, JSObject *parent, SV *ref);
 	
 /*! @function PJS_InitPerlScalarClass
     @abstract Initiailizes the PerlScalar class
@@ -19,7 +19,7 @@ PJS_NewPerlScalar(JSContext *cx, JSObject *parent, SV *ref);
 	@param global The global object for the context
 */
 PJS_EXTERN JSObject *
-PJS_InitPerlScalarClass(JSContext *cx, JSObject *global);
+PJS_InitPerlScalarClass(pTHX_ JSContext *cx, JSObject *global);
 	
 #ifdef __cplusplus
 }

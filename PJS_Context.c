@@ -16,6 +16,7 @@ perl_class_finalize (
     JSContext *cx,
     JSObject *object
 ) {
+    dTHX;
     PJS_Context *pcx;
 #ifdef PJS_CONTEXT_IN_PERL
     pcx = JS_GetPrivate(cx, object);
@@ -45,10 +46,10 @@ JSClass perl_class = {
 };
 
 JSBool
-PJS_InitPerlClasses(PJS_Context *pcx, JSObject *gobj)
+PJS_InitPerlClasses(pTHX_ PJS_Context *pcx, JSObject *gobj)
 {
     JSObject *perl;
-    JSContext *cx = pcx->cx;
+    JSContext *cx = PJS_getJScx(pcx);
 
     perl = JS_NewObject(cx, &perl_class, NULL, gobj);
     if(perl && JS_DefineProperty(cx, gobj, "__PERL__",
@@ -65,10 +66,10 @@ PJS_InitPerlClasses(PJS_Context *pcx, JSObject *gobj)
 #endif
 	pcx->jsvisitors = newHV();
 	pcx->class_by_name = newHV();
-	if(PJS_InitPerlArrayClass(cx, gobj) &&
-	   PJS_InitPerlHashClass(cx, gobj) &&
-	   PJS_InitPerlScalarClass(cx, gobj) &&
-           PJS_InitPerlSubClass(cx, gobj)) {
+	if(PJS_InitPerlArrayClass(aTHX_ cx, gobj) &&
+	   PJS_InitPerlHashClass(aTHX_ cx, gobj) &&
+	   PJS_InitPerlScalarClass(aTHX_ cx, gobj) &&
+           PJS_InitPerlSubClass(aTHX_ cx, gobj)) {
 	    return JS_TRUE;
 	}
     }
@@ -98,6 +99,7 @@ js_error_reporter(
     const char *message,
     JSErrorReport *report
 ) {
+    dTHX;
     if(report->flags & JSREPORT_WARNING) 
 	warn(message);
     else {
@@ -110,21 +112,14 @@ js_error_reporter(
   Create PJS_Context structure
 */
 PJS_Context *
-PJS_CreateContext(PJS_Runtime *rt, SV *ref) {
+PJS_CreateContext(pTHX_ PJS_Runtime *rt, SV *ref) {
     PJS_Context *pcx;
     JSObject *gobj;
 
     Newz(1, pcx, 1, PJS_Context);
     if(!pcx)
         croak("Failed to allocate memory for PJS_Context");
-    /* 
-        The 'stack size' param here isn't actually the stack size, it's
-        the "chunk size of the stack pool--an obscure memory management
-        tuning knob"
         
-        http://groups.google.com/group/mozilla.dev.tech.js-engine/browse_thread/thread/be9f404b623acf39
-    */
-    
     pcx->cx = JS_NewContext(rt->rt, 8192);
 
     if(!pcx->cx) {
@@ -136,10 +131,13 @@ PJS_CreateContext(PJS_Runtime *rt, SV *ref) {
     JS_SetOptions(pcx->cx, JSOPTION_DONT_REPORT_UNCAUGHT);
     JS_SetErrorReporter(pcx->cx, &js_error_reporter);
 
-    /* Create a global object for the context */
+#if JS_VERSION == 185
+    gobj = JS_NewGlobalObject(pcx->cx, &global_class);
+#else
     gobj = JS_NewObject(pcx->cx, &global_class, NULL, NULL);
+#endif
     if(!gobj || !JS_InitStandardClasses(pcx->cx, gobj)) {
-        PJS_DestroyContext(pcx);
+        PJS_DestroyContext(aTHX_ pcx);
         croak("Standard classes not loaded properly.");
     }
 
@@ -148,11 +146,11 @@ PJS_CreateContext(PJS_Runtime *rt, SV *ref) {
 	pcx->rrt = SvREFCNT_inc_simple_NN(ref);
     pcx->svconv = 0;
 
-    if(PJS_InitPerlClasses(pcx, gobj)) {
+    if(PJS_InitPerlClasses(aTHX_ pcx, gobj)) {
 	return pcx;
     }
     else {
-        PJS_DestroyContext(pcx);
+        PJS_DestroyContext(aTHX_ pcx);
         croak("Perl classes not loaded properly.");        
     }
     return NULL; /* Not really reached */
@@ -160,10 +158,10 @@ PJS_CreateContext(PJS_Runtime *rt, SV *ref) {
 
 static void
 PJS_unmagic(
+    pTHX_
     PJS_Context *pcx,
     SV *sv
 ) {
-    dTHX;
     MAGIC* mg;
     MAGIC** mgp;
 
@@ -198,7 +196,7 @@ PJS_unmagic(
 /*
   Free memory occupied by PJS_Context structure
 */
-void PJS_DestroyContext(PJS_Context *pcx) {
+void PJS_DestroyContext(pTHX_ PJS_Context *pcx) {
     SV *rrt = NULL;
     if(pcx->cx && pcx->rt && pcx->rt->rt) {
 	JSContext *cx = pcx->cx; 
@@ -213,7 +211,7 @@ void PJS_DestroyContext(PJS_Context *pcx) {
 	    while( (val = hv_iternextsv(hv, &key, &len)) ) {
 		JSObject *shell = (JSObject *)SvIVX(val);
 		SV *ref = (SV *)JS_GetPrivate(cx, shell);
-		if(ref && SvROK(ref)) PJS_unmagic(pcx, SvRV(ref));
+		if(ref && SvROK(ref)) PJS_unmagic(aTHX_ pcx, SvRV(ref));
 		// TODO: Assert needed?
 	    }
 	}
@@ -234,7 +232,7 @@ void PJS_DestroyContext(PJS_Context *pcx) {
 }
 
 JSBool
-PJS_RootObject(
+PJS_rootObject(
     PJS_Context *pcx,
     JSObject *object
 ) {
@@ -257,11 +255,11 @@ static MGVTBL vtbl_jsvt = { 0, 0, 0, 0, jsv_free };
 
 JSObject *
 PJS_CreateJSVis(
+    pTHX_
     JSContext *cx,
     JSObject *object,
     SV *ref
 ) {
-    dTHX;
     jsv_mg *jsvis;
     MAGIC *mg;
     char hkey[32];
@@ -289,9 +287,9 @@ PJS_CreateJSVis(
 	    mg = sv_magicext(sv, NULL, PERL_MAGIC_jsvis,
 		             &vtbl_jsvt, (char *)jsvis, 0);
 	    mg->mg_private = 0x4a53;
-#ifdef DEBUG
+#ifdef PJSDEBUG
 	    warn("New jsvisitor %s: %s RC %d,%d\n",
-		 jsvis->hkey, SvPV_nolen(ref), SvREFCNT(ref), SvREFCNT(sv)
+		 hkey, SvPV_nolen(ref), SvREFCNT(ref), SvREFCNT(sv)
 	    );
 #endif
 	    /* The shell object takes ownership of ref */
@@ -304,12 +302,11 @@ PJS_CreateJSVis(
 	}
     }
     else JS_ReportOutOfMemory(cx);
-
     return NULL;
 }
 
 void
-PJS_UnrootJSVis(
+PJS_unrootJSVis(
     JSContext *cx,
     JSObject *object
 ) {
@@ -319,7 +316,7 @@ PJS_UnrootJSVis(
 	char hkey[32];
 	PJS_Context *pcx = PJS_GET_CONTEXT(cx); // At Context destruction can be NULL
 	(void)snprintf(hkey, 32, "%p", (void *)SvRV(ref));
-	if(pcx && SvMAGICAL(SvRV(ref))) PJS_unmagic(pcx, SvRV(ref));
+	if(pcx && SvMAGICAL(SvRV(ref))) PJS_unmagic(aTHX_ pcx, SvRV(ref));
 	if(pcx && pcx->jsvisitors) {
 	    (void)hv_delete(pcx->jsvisitors, hkey, strlen(hkey), G_DISCARD);
 	}
@@ -331,6 +328,7 @@ PJS_UnrootJSVis(
 
 JSObject *
 PJS_IsPerlVisitor(
+    pTHX_
     PJS_Context *pcx,
     SV *sv
 ) {
@@ -347,23 +345,23 @@ PJS_IsPerlVisitor(
 }
 
 JSBool
-PJS_SetFlag(
+PJS_setFlag(
     PJS_Context *pcx,
     const char *flag,
     JSBool val
 ) {
-    return JS_DefineProperty(pcx->cx, pcx->flags, flag,
+    return JS_DefineProperty(PJS_getJScx(pcx), pcx->flags, flag,
 	                     val ? JSVAL_TRUE : JSVAL_FALSE,
 		             NULL, NULL,  0);
 }
 
 JSBool
-PJS_GetFlag(
+PJS_getFlag(
     PJS_Context *pcx,
     const char *flag
 ) {
     jsval val;
-    JS_LookupProperty(pcx->cx, pcx->flags, flag, &val);
+    JS_LookupProperty(PJS_getJScx(pcx), pcx->flags, flag, &val);
     return !JSVAL_IS_VOID(val) && JSVAL_TO_BOOLEAN(val);
 }
 
@@ -373,6 +371,7 @@ JSBool PJS_branch_handler(
     JSContext *cx,
     JSScript *script
 ) {
+    dTHX;
     PJS_Context *pcx;
     SV *rv;
     JSBool status = JS_TRUE;
@@ -383,6 +382,7 @@ JSBool PJS_branch_handler(
 	dSP;
         ENTER; SAVETMPS;
         PUSHMARK(SP);
+        sv_setiv(save_scalar(PJS_Context_SV), PTR2IV(pcx));
         
         (void)call_sv(SvRV(pcx->branch_handler), G_SCALAR | G_EVAL);
 
@@ -391,10 +391,9 @@ JSBool PJS_branch_handler(
         if(!SvTRUE(rv))
             status = JS_FALSE;
 
-        if(SvTRUE(ERRSV)) {
-            sv_setsv(ERRSV, &PL_sv_undef);
-            status = JS_FALSE;
-        }
+        // if(SvTRUE(ERRSV)) {
+        //     status = JS_FALSE;
+        // }
         
         PUTBACK;
         FREETMPS; LEAVE;

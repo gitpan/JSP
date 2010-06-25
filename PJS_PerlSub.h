@@ -14,7 +14,7 @@ PJS_EXTERN JSBool
 perlsub_as_constructor(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 PJS_EXTERN JSObject *
-PJS_NewPerlSub(JSContext *cx, JSObject *parent, SV *ref);
+PJS_NewPerlSub(pTHX_ JSContext *cx, JSObject *parent, SV *ref);
     	
 /*! @function PJS_InitPerlSubClass
     @abstract Initiailizes the Perl sub class
@@ -22,7 +22,7 @@ PJS_NewPerlSub(JSContext *cx, JSObject *parent, SV *ref);
 	@param global The global object for the context
 */
 PJS_EXTERN JSObject *
-PJS_InitPerlSubClass(JSContext *cx, JSObject *global);
+PJS_InitPerlSubClass(pTHX_ JSContext *cx, JSObject *global);
 	
 #ifdef __cplusplus
 }

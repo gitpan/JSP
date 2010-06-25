@@ -170,8 +170,9 @@ is($baz->{yyy}, 'dad', "Changes reflected");
 
 {
   # Test namespace can be populated from JS land
-  ok($ctl->add('somepack'), "Create new package");
-  ok(my $pstash = $ctl->added('somepack'), "Get stash");
+  my $pack = 'somepack';
+  ok($ctl->add($pack), "Create new package");
+  ok(my $pstash = $ctl->added($pack), "Get stash");
   $pstash->allow_from_js(1);
   $ctx->jsc_eval($pstash, q|
     var $var0 = 'hello';
@@ -181,11 +182,12 @@ is($baz->{yyy}, 'dad', "Changes reflected");
     function boz(a) { return a.__PACKAGE__ }
   |);
   { no warnings 'once';
-    is($somepack::var0, 'hello', "Scalar variable defined");
-    is($somepack::var1, undef, "Simple variable not defined");
+    no strict 'refs';
+    is(${$pack.'::var0'}, 'hello', "Scalar variable defined");
+    is(${$pack.'::var1'}, undef, "Simple variable not defined");
   }
-  ok(defined(&somepack::foo), "Function defined");
-  ok(!defined(&somepack::bar), "But not other");
+  ok(defined(&{$pack.'::foo'}), "Function defined");
+  ok(!defined(&{$pack.'::bar'}), "But not other");
   is(somepack::foo(), 'somepack', "Call from perl works");
   is(somepack::baz(), undef, "In Global");
   is(somepack->baz(), 'somepack' , "In package");

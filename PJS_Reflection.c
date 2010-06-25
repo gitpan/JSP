@@ -17,7 +17,7 @@ passport_finalize(
     SV *box = (SV *)JS_GetPrivate(cx, passport);
     if(box && SvOK(box) && SvROK(box)) {
 	AV *avbox = (AV *)SvRV(box);
-#ifdef DEBUG
+#ifdef PJSDEBUG
 	JSObject *parent = JS_GetParent(cx, passport);
 #endif
 	PJS_DEBUG3("About to free a %s rc:%d,%d\n", JS_GET_CLASS(cx, parent)->name, 
@@ -45,10 +45,10 @@ static JSClass passport_class = {
 
 char *
 PJS_ConvertUC(
+    pTHX_
     SV *sv,
     STRLEN *len
 ) {
-    dTHX;
     dSP;
     char *ret;
     STRLEN elen;
@@ -77,9 +77,9 @@ PJS_ConvertUC(
 
 SV *
 PJS_JSString2SV(
+    pTHX_
     JSString *jstr
 ) {
-    dTHX;
     SV *ret;
 #if PJS_UTF8_NATIVE
     char *str = JS_GetStringBytes(jstr);
@@ -108,12 +108,12 @@ PJS_JSString2SV(
 /* Converts perl values to equivalent JS values */
 JSBool
 PJS_ReflectPerl2JS(
+    pTHX_ 
     JSContext *cx,
     JSObject *pobj,
     SV *ref,
     jsval *rval
 ) {
-    dTHX;
     PJS_Context *pcx = PJS_GET_CONTEXT(cx);
     JSObject *newobj = NULL;
 
@@ -131,7 +131,7 @@ PJS_ReflectPerl2JS(
     if(SvROK(ref)) {
 	MAGIC *mg;
 	/* First check old jsvisitors */
-	if((newobj = PJS_IsPerlVisitor(pcx, SvRV(ref)))) {
+	if((newobj = PJS_IsPerlVisitor(aTHX_ pcx, SvRV(ref)))) {
 	    PJS_DEBUG("Old jsvisitor returns\n");
 	    *rval = OBJECT_TO_JSVAL(newobj);
 	    return JS_TRUE;
@@ -156,7 +156,7 @@ PJS_ReflectPerl2JS(
 	}
 	
 	if(sv_isobject(ref)) {
-	    newobj = PJS_NewPerlObject(cx, pobj, ref); 
+	    newobj = PJS_NewPerlObject(aTHX_ cx, pobj, ref); 
 	    if(newobj) {
 		*rval = OBJECT_TO_JSVAL(newobj);
 		return JS_TRUE;
@@ -195,13 +195,13 @@ PJS_ReflectPerl2JS(
         I32 type = SvTYPE(SvRV(ref));
 
         if(type == SVt_PVHV)
-	    newobj = PJS_NewPerlHash(cx, pobj, ref);
+	    newobj = PJS_NewPerlHash(aTHX_ cx, pobj, ref);
 	else if(type == SVt_PVAV)
-	    newobj = PJS_NewPerlArray(cx, pobj, ref);
+	    newobj = PJS_NewPerlArray(aTHX_ cx, pobj, ref);
         else if(type == SVt_PVCV)
-            newobj = PJS_NewPerlSub(cx, pobj, ref);            
+            newobj = PJS_NewPerlSub(aTHX_ cx, pobj, ref);            
 	else
-	    newobj = PJS_NewPerlScalar(cx, pobj, ref);
+	    newobj = PJS_NewPerlScalar(aTHX_ cx, pobj, ref);
 	if(!newobj) return JS_FALSE;
 	*rval = OBJECT_TO_JSVAL(newobj);
     }
@@ -215,10 +215,10 @@ PJS_ReflectPerl2JS(
 
 SV *
 PrimJSVALToSV(
+    pTHX_
     JSContext *cx,
     jsval v
 ) {
-    dTHX;
     SV *sv = NULL;
     if(JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
 	sv = newSV(0);
@@ -231,17 +231,17 @@ PrimJSVALToSV(
     else if(JSVAL_IS_DOUBLE(v))
 	sv = newSVnv(*JSVAL_TO_DOUBLE(v));
     else if(JSVAL_IS_STRING(v)) 
-	sv = PJS_JSString2SV(JSVAL_TO_STRING(v));
+	sv = PJS_JSString2SV(aTHX_ JSVAL_TO_STRING(v));
     else croak("PJS_Assert: Unknown primitive type");
     
     return sv;
 }
 
 SV* PJS_GetPassport(
+    pTHX_
     JSContext *cx,
     JSObject *thing
 ) {
-    dTHX;
     jsval temp;
     SV *box;
     SV *tref;
@@ -261,14 +261,14 @@ SV* PJS_GetPassport(
  */
 JSBool
 PJS_ReflectJS2Perl(
+    pTHX_
     JSContext *cx,
     jsval value,
     SV** sv,
     int full
 ) {
-    dTHX;
     if(JSVAL_IS_PRIMITIVE(value)) {
-	*sv = PrimJSVALToSV(cx, value);
+	*sv = PrimJSVALToSV(aTHX_ cx, value);
 	if(*sv) return JS_TRUE;
     }
     else if(JSVAL_IS_OBJECT(value)) {
@@ -285,7 +285,7 @@ PJS_ReflectJS2Perl(
 	snprintf(hkey, 32, "%p", (void *)object);
 	PJS_DEBUG2("Wrapping a %s(%s)\n", classname, hkey);
 
-	if(PJS_GetFlag(pcx, "ConvertRegExp") && strEQ(classname, "RegExp")) {
+	if(PJS_getFlag(pcx, "ConvertRegExp") && strEQ(classname, "RegExp")) {
 	    jsval src;
 	    char *str;
 
@@ -327,7 +327,7 @@ PJS_ReflectJS2Perl(
 	    /* Already registered, so exits a reference in perl space
 	     * _must_ hold a PASSPORT */
 	    assert(JSVAL_TO_OBJECT(temp) == object);
-	    box = PJS_GetPassport(cx, object);
+	    box = PJS_GetPassport(aTHX_ cx, object);
 	    SvREFCNT_inc_void_NN(box); /* In perl should be one more */
 	    PJS_DEBUG1("Cached!: %s\n", hkey);
 	} else {
@@ -371,7 +371,7 @@ PJS_ReflectJS2Perl(
 
 		sv_setref_pv(robj, PJS_RAW_OBJECT, (void*)object);
 		sv_setref_iv(rjsv, PJS_RAW_JSVAL, (IV)value);
-		boxref = PJS_call_perl_method(cx,
+		boxref = PJS_CallPerlMethod(aTHX_ cx,
 		    "__new",
 		    sv_2mortal(newSVpv(package, 0)),	 // package
 		    sv_2mortal(robj),			 // content
@@ -406,7 +406,7 @@ PJS_ReflectJS2Perl(
 	}
 	/* Here the RC of box in PASSPORT reflects wrapper's ownership */
 
-	if(full && PJS_GetFlag(pcx, "AutoTie") &&
+	if(full && PJS_getFlag(pcx, "AutoTie") &&
 	   (strEQ(classname, "Object") || strEQ(classname, "Array"))
 	) {
 	    /* Return tied */

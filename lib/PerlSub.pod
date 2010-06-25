@@ -1,12 +1,6 @@
-package JSP::PerlSub;
-# Documentation only
-1;
-
-__END__
-
 =head1 NAME
 
-JSP::PerlSub - Encapsulate a Perl CODE reference in javascript
+PerlSub - Encapsulate a perl CODE reference in JavaScript
 
 =head1 DESCRIPTION
 
@@ -46,7 +40,7 @@ list of arguments.
     var baz = bar();	    // invoke it, baz now a random number
 
 And as with any other object, you can manipulate properties and call methods of
-instances of PerlSub.
+instances of C<PerlSub>.
 
     perl_rand.attr = 'This is a function imported from perl';
     add.toString();          // Please try this ;-)
@@ -209,3 +203,5 @@ magical variable L<JSP/$This>.
 Perl code not aware of being called from JavaScript will see its arguments
 unmodified. Perl code that needs JavaScript's C<this> gets it in C<$JSP::This>.
 And everyone is happy.
+
+=cut

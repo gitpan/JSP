@@ -24,10 +24,10 @@ struct PJS_Context {
     /* Referece to hi-level RT */
     SV  *rrt;		    
 
-#ifdef JS_HAS_BRANCH_HANDLER
-    /* Set to a SVt_PVCV if we have an branch handler */
+    /* Set to a SVt_PVCV if we have an branch handler
+     * Used by both jsc_set_branch_handler and jsc_set_operation_callback
+     */
     SV *branch_handler;
-#endif
 
     /* JSObject for js visitors to perl */
     JSObject *pvisitors;
@@ -57,7 +57,7 @@ PJS_GetContext(JSContext *);
     @param context The context to free
 */
 PJS_EXTERN void
-PJS_DestroyContext(PJS_Context *context);
+PJS_DestroyContext(pTHX_ PJS_Context *context);
 
 /*! @function PJS_RootObject
     @abstract Add object to the list rooted in context
@@ -65,16 +65,16 @@ PJS_DestroyContext(PJS_Context *context);
     @param object  The object to add
 */
 PJS_EXTERN JSBool
-PJS_RootObject(PJS_Context *context, JSObject *object);
+PJS_rootObject(PJS_Context *context, JSObject *object);
 
 PJS_EXTERN JSObject *
-PJS_CreateJSVis(JSContext *, JSObject *, SV *);
+PJS_CreateJSVis(pTHX_ JSContext *, JSObject *, SV *);
 
 PJS_EXTERN void
-PJS_UnrootJSVis(JSContext *cx, JSObject *object);
+PJS_unrootJSVis(JSContext *cx, JSObject *object);
 
 PJS_EXTERN JSObject *
-PJS_IsPerlVisitor( PJS_Context *pcx, SV *sv);
+PJS_IsPerlVisitor(pTHX_ PJS_Context *pcx, SV *sv);
 
 /*! @function PJS_CreateContext
     @abstract Creates a new context
@@ -85,10 +85,12 @@ PJS_IsPerlVisitor( PJS_Context *pcx, SV *sv);
     @result A pointer to a PJS_Context structure if successfull.
 */
 PJS_EXTERN PJS_Context *
-PJS_CreateContext(PJS_Runtime *runtime, SV *ref);
+PJS_CreateContext(pTHX_ PJS_Runtime *runtime, SV *ref);
 
+#ifdef JS_HAS_BRANCH_HANDLER
 PJS_EXTERN JSBool
 PJS_branch_handler(JSContext *, JSScript *);
+#endif
 
 /*! @functiongroup Querying contexts */
 
@@ -100,17 +102,17 @@ PJS_branch_handler(JSContext *, JSScript *);
     or NULL if the function did not exist.
 */
 PJS_EXTERN JSBool
-PJS_GetFlag(PJS_Context *fromContext, const char *flag);
+PJS_getFlag(PJS_Context *fromContext, const char *flag);
 
 PJS_EXTERN JSBool
-PJS_SetFlag(PJS_Context *fromContext, const char *flag, JSBool val); 
+PJS_setFlag(PJS_Context *fromContext, const char *flag, JSBool val); 
 
 /*! @function PJS_GetJSContext
     @abstract Retrieve the JSContext from a PJS_Context
     @param fromContext The context to search in
     @result A pointer to the underlying JSContext
 */
-#define PJS_GetJSContext(fromContext) (fromContext->cx)
+#define PJS_getJScx(pcx) (pcx->cx)
 
 PJS_EXTERN GV *PJS_Context_SV;
 PJS_EXTERN GV *PJS_This;

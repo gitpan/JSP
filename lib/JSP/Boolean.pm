@@ -33,8 +33,7 @@ following:
 	}
     }
 
-So the need arise to generate from perl true javascript boolean values, in
-those cases you can use the class methods described next.
+So the need arises to be able to generate true javascript boolean values from perl. In those cases you can use the class methods described next.
 
 =head1 Class methods
 

@@ -11,14 +11,18 @@ static JSBool perlpackage_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool perlpackage_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 static JSBool perlpackage_resolve(JSContext *, JSObject *, jsval, uintN, JSObject **);
 
-#if PERL_VERSION < 9
+#if !defined(gv_const_sv)
 static SV *
-gv_const_sv(GV *gv) {
-    dTHX;
+Perl_gv_const_sv(pTHX_ GV *gv) {
     if(SvTYPE(gv) == SVt_PVGV)
 	return cv_const_sv(GvCVu(gv));
     return NULL;
 }
+#if !defined(PERL_IMPLICIT_CONTEXT)
+#define gv_const_sv	Perl_gv_const_sv
+#else
+#define gv_const_sv(a)	Perl_gv_const_sv(aTHX_ a)
+#endif
 #endif
 
 JSClass perlpackage_class = {
@@ -27,7 +31,7 @@ JSClass perlpackage_class = {
 	| JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1),
     perlpackage_add, JS_PropertyStub, perlpackage_get, perlpackage_set,
     JS_EnumerateStub, (JSResolveOp)perlpackage_resolve,
-    JS_ConvertStub, PJS_UnrootJSVis,
+    JS_ConvertStub, PJS_unrootJSVis,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -45,8 +49,10 @@ perlpackage_add(
     jsval temp;
     JSBool can, ok = TRUE;
     
-    if(!ref || !JSVAL_IS_STRING(id))
+    if(!JSVAL_IS_STRING(id))
 	return JS_TRUE;
+
+    assert(ref != NULL);
 
     key = JS_GetStringBytes(JSVAL_TO_STRING(id));
     PJS_DEBUG1("In PC add for '%s'\n", key);
@@ -64,11 +70,11 @@ perlpackage_add(
 
     ENTER; SAVETMPS;
     PJS_DEBUG2("Want add '%s' in '%s'\n", key, HvNAME((HV *)SvRV(ref)));
-    if(!PJS_ReflectJS2Perl(cx, *vp, &sv, 0))
+    if(!PJS_ReflectJS2Perl(aTHX_ cx, *vp, &sv, 0))
 	ok = JS_FALSE;
 
     if(ok && sv_isobject(sv_2mortal(sv)) && sv_derived_from(sv, PJS_OBJECT_PACKAGE)) {
-	SV *res = PJS_call_perl_method(cx,
+	SV *res = PJS_CallPerlMethod(aTHX_ cx,
 	    "__bind_to_stash",
 	    sv,
 	    sv_2mortal(newSVpv(HvNAME((HV *)SvRV(ref)) ,0)),
@@ -106,8 +112,10 @@ static JSBool perlpackage_set(
     jsval temp;
     JSBool can;
     
-    if(!JSVAL_IS_STRING(id) || !ref)
+    if(!JSVAL_IS_STRING(id))
 	return JS_TRUE;
+
+    assert(ref != NULL);
     
     key = JS_GetStringBytes(JSVAL_TO_STRING(id));
     package = HvNAME((HV *)SvRV(ref));
@@ -120,7 +128,7 @@ static JSBool perlpackage_set(
 	if(JS_GetProperty(cx, obj, PJS_EXPORT_PROP, &temp) &&
 	   JS_ValueToBoolean(cx, temp, &can) && !can)
 	    return JS_TRUE; /* Export vetoed */
-	if(!PJS_ReflectJS2Perl(cx, *vp, &nsv, 1)) 
+	if(!PJS_ReflectJS2Perl(aTHX_ cx, *vp, &nsv, 1)) 
 	    return JS_FALSE;
 	name = form_name(package, key);
 	PJS_DEBUG1("In PCS set for $%s\n", name);
@@ -161,7 +169,7 @@ static JSBool perlpackage_get(
 	SV *sv = get_sv(name, 0);
 	PJS_DEBUG1("In PCS get for $%s\n", name);
 	Safefree(name);
-	if(sv) return PJS_ReflectPerl2JS(cx, obj, sv, vp);
+	if(sv) return PJS_ReflectPerl2JS(aTHX_ cx, obj, sv, vp);
     }
     return JS_TRUE;
 }
@@ -230,7 +238,7 @@ static JSBool perlpackage_resolve(
 	    // if(sv && SvOK(sv)) PJS_DEBUG1("Scalar %s found\n", name);
 	    Safefree(name);
 	    /* Make property defined, but lets getter do its work */
-	    if(sv) {
+	    if(sv || (flags & JSRESOLVE_DECLARING)) {
 		if(JS_DefineProperty(cx, obj, key, JSVAL_VOID, NULL, NULL, 0)) {
 		    *objp = obj;
 		    return JS_TRUE;
@@ -238,14 +246,14 @@ static JSBool perlpackage_resolve(
 		return JS_FALSE;
 	    }
     }
-    if(!sv && PJS_GetFlag(PJS_GET_CONTEXT(cx), "ConstantsValue")) {
+    if(!sv && PJS_getFlag(PJS_GET_CONTEXT(cx), "ConstantsValue")) {
 	GV **gvp;
 	gvp = (GV**)hv_fetch(stash, key, strlen(key), 0);
 	if(gvp && *gvp != (GV*)&PL_sv_undef)
 	    sv = gv_const_sv(*gvp);
     }
     if(sv) {
-	if(PJS_ReflectPerl2JS(cx, obj, sv, &temp) &&
+	if(PJS_ReflectPerl2JS(aTHX_ cx, obj, sv, &temp) &&
 	   JS_DefineProperty(cx, obj, key, temp, NULL, NULL, 0)
 	)
 	    *objp = obj;
@@ -258,7 +266,7 @@ static JSBool perlpackage_resolve(
     if(gv) {
 	PJS_DEBUG("Method found\n");
 	// TODO: Make method resolution dynamic
-	if(PJS_ReflectPerl2JS(cx, obj,
+	if(PJS_ReflectPerl2JS(aTHX_ cx, obj,
 	                           (sv = newRV_inc((SV *)GvCV(gv))), &temp) &&
 	   JS_DefineProperty(cx, obj, key, temp, NULL, NULL, 0))
 	    *objp = obj;
@@ -291,10 +299,10 @@ perlpackage_eget(
 
 JSObject *
 PJS_GetPackageObject(
+    pTHX_
     JSContext *cx,
     const char *package
 ) {
-    dTHX;
     JSObject *scope;
 
     scope = JS_GetScopeChain(cx);
@@ -324,7 +332,7 @@ PJS_GetPackageObject(
 		pkg = JS_NewObject(cx, &perlpackage_class, NULL, stashes);
 		if(pkg) {
 		    JSObject *proto;
-		    PJS_CreateJSVis(cx, pkg, newRV_noinc((SV *)stash));
+		    PJS_CreateJSVis(aTHX_ cx, pkg, newRV_noinc((SV *)stash));
 		    if((proto = JS_NewObject(cx, NULL, pkg, scope)) &&
 		       JS_DefineProperty(cx, pkg, PJS_PROXY_PROP,
 					 OBJECT_TO_JSVAL(proto),
@@ -341,7 +349,7 @@ PJS_GetPackageObject(
 		       JS_DefineProperty(cx, proto, "constructor", JSVAL_VOID,
 					 NULL, perlsub_as_constructor, 0)
 		    ) return pkg;
-		    else PJS_UnrootJSVis(cx, pkg); /* Let GC do its work */
+		    else PJS_unrootJSVis(cx, pkg); /* Let GC do its work */
 		}
 	    }
 	    return NULL; /* Failed */
@@ -353,9 +361,8 @@ PJS_GetPackageObject(
 }
 
 char *
-PJS_GetPackageName(JSContext *cx, JSObject *package)
+PJS_GetPackageName(pTHX_ JSContext *cx, JSObject *package)
 {
-    dTHX;
     SV *ref = (SV *)JS_GetInstancePrivate(cx, package, &perlpackage_class, NULL);
     if(ref) return HvNAME((HV *)SvRV(ref));
     else {
@@ -373,7 +380,7 @@ static JSBool perlobj_get(
     jsval id,
     jsval *vp
 ) {
-    dTHX;
+    // dTHX;
     SV *ref = (SV *)JS_GetPrivate(cx, obj);
     SV *sv = SvRV(ref);
     if(SvTYPE(sv) == SVt_PVHV)
@@ -396,11 +403,11 @@ static JSBool perlobj_set(
     if(SvTYPE(sv) == SVt_PVHV && JSVAL_IS_STRING(id)) {
 	SV *svk;
 	ENTER; SAVETMPS;
-	svk = PJS_JSString2SV(JSVAL_TO_STRING(id));
+	svk = PJS_JSString2SV(aTHX_ JSVAL_TO_STRING(id));
 	sv_2mortal(svk);
 	if(hv_exists_ent((HV *)sv, svk, 0)) {
 	    SV *nsv;
-	    if(!PJS_ReflectJS2Perl(cx, *vp, &nsv, 1)) ok = JS_FALSE;
+	    if(!PJS_ReflectJS2Perl(aTHX_ cx, *vp, &nsv, 1)) ok = JS_FALSE;
 	    if(ok && hv_store_ent((HV *)sv, svk, nsv, 0) == NULL) {
 		if(SvSMAGICAL((HV *)sv)) mg_set(nsv);
 		else ok = JS_FALSE; // TODO: Check error to report
@@ -417,17 +424,16 @@ static JSBool perlobj_set(
 JSClass perlobj_class = {
     "PerlObject", JSCLASS_PRIVATE_IS_PERL,
     JS_PropertyStub, JS_PropertyStub, perlobj_get, perlobj_set,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PJS_UnrootJSVis,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PJS_unrootJSVis,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JSObject *
-PJS_NewPerlObject(JSContext *cx, JSObject *parent, SV *objref)
+PJS_NewPerlObject(pTHX_ JSContext *cx, JSObject *parent, SV *objref)
 {
-    dTHX;
     JSObject *newobj = NULL;
     char *stname = HvNAME(SvSTASH(SvRV(objref)));
-    JSObject *stash = PJS_GetPackageObject(cx, stname);
+    JSObject *stash = PJS_GetPackageObject(aTHX_ cx, stname);
     
     if(stash) {
 	JSClass *impl = &perlobj_class;
@@ -443,7 +449,7 @@ PJS_NewPerlObject(JSContext *cx, JSObject *parent, SV *objref)
 	else croak("Not an object!\n");
 
 	newobj = JS_NewObject(cx, impl, proto, parent);
-	return PJS_CreateJSVis(cx, newobj, objref);
+	return PJS_CreateJSVis(aTHX_ cx, newobj, objref);
     }
     return NULL;
 }

@@ -11,16 +11,16 @@ extern "C" {
 #endif
 
 PJS_EXTERN SV *
-PJS_call_perl_method(JSContext *, const char *, ...);
+PJS_CallPerlMethod(pTHX_ JSContext *, const char *, ...);
 
 PJS_EXTERN JSBool
-perl_call_sv_with_jsvals_rsv(JSContext *, JSObject *, SV *, SV *, uintN, jsval *, SV **, I32);
+PJS_Call_sv_with_jsvals_rsv(pTHX_ JSContext *, JSObject *, SV *, SV *, uintN, jsval *, SV **, I32);
 
 PJS_EXTERN JSBool
-perl_call_sv_with_jsvals(JSContext *, JSObject *, SV *, SV *, uintN, jsval *, jsval *, I32);
+PJS_Call_sv_with_jsvals(pTHX_ JSContext *, JSObject *, SV *, SV *, uintN, jsval *, jsval *, I32);
 
 PJS_EXTERN JSBool
-call_js_function(JSContext *, JSObject *, jsval, AV *, jsval *);
+PJS_Call_js_function(pTHX_ JSContext *, JSObject *, jsval, AV *, jsval *);
 
 #ifdef __cplusplus
 }

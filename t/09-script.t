@@ -6,6 +6,7 @@ use strict;
 use warnings;
 
 use JSP;
+require JSP::SM::ByteCode;
 
 # Create a new runtime
 my $rt1 = JSP::Runtime->new();
@@ -18,10 +19,15 @@ my $script = $cx1->compile(q!
 !);
 
 isa_ok($script, "JSP::Script", "Compile returns object");
+
 #Developer's sanity tests
-my($c, $i) = unpack('Cn', $script->_prolog);
-is($c, 127, "Prolog ok");
-is($script->_getatom($i), 'v', "Declares v");
+my $prolog = JSP::SM::ByteCode->prolog($script);
+while(my @opd = $prolog->decode) {
+    my $op = $opd[0]->id;
+    next if $op eq 'JSOP_TRACE';
+    is($op, 'JSOP_DEFVAR', "Prolog ok");
+    is($opd[1], 'v', "Declares v");
+}
 
 # Run the script
 for(1 .. 10) {

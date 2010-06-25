@@ -1,17 +1,9 @@
-package JSP::PerlArray;
-
-# Documentation only
-
-1;
-__END__
-
 =head1 NAME
 
-JSP::PerlArray - Encapsulate a Perl ARRAY in javascript space
+PerlArray - Encapsulate a Perl ARRAY in JavaScript space
 
 Any ARRAY reference that you pass from perl to javascript will be automatically
-wrapped as an instance of C<PerlArray>, this page documents its properties and
-methods.
+wrapped as an instance of C<PerlArray>.
 
 =head1 JAVASCRIPT INTERFACE
 
@@ -203,7 +195,7 @@ Returns a string that when evaluated recreated the PerlArray.
 
 =item $construct_blessed
 
-When you set the variable I<$construct_blessed> to a TRUE value, you are
+When you set the variable I<$JSP::PerlArray::construct_blessed> to a TRUE value, you are
 turning on the Claes's JavaScript compatibility mode. This affects the behavior
 of the javascript C<PerlHash> constructor.
 

@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 PJS_EXTERN JSBool
-PJS_report_exception(PJS_Context *);    
+PJS_report_exception(pTHX_ PJS_Context *);    
 
 #ifdef __cplusplus
 }
